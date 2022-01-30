@@ -40,42 +40,67 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the kahoot api!' });
 });
 
-app.get('/room/:id', (req, res) => {
+app.get('/rooms', async (req, res) => {
+  try {
+    const rooms = await Rooms.getAllRooms();
+    res.json(rooms);
+  } catch (err) {
+    res.status(500).json(`${err}`);
+  }
+});
+
+app.get('/room/:id', async (req, res) => {
   const roomID = req.params.id;
-  Rooms.getRoomInfo(roomID).then((roomInfo) => {
+  try {
+    const roomInfo = await Rooms.getRoomInfo(roomID);
     res.json(roomInfo);
-  }).catch((err) => {
+  } catch (err) {
     res.status(404).send(`ERROR: ${err}`);
-  });
+  }
 });
 
-app.get('/scoreboard/:id', (req, res) => {
+app.get('/scoreboard/:id', async (req, res) => {
   const roomID = req.params.id;
-  Rooms.getScoreboard(roomID).then((scoreboard) => {
+  try {
+    const scoreboard = await Rooms.getScoreboard(roomID);
     res.json(scoreboard);
-  }).catch((err) => {
+  } catch {
     res.status(404).json({ message: 'Room not found' });
-  });
+  }
 });
 
-app.post('/submit/:id', (req, res) => {
+app.post('/submission/:id', async (req, res) => {
   const roomID = req.params.id;
   const { user } = req.body;
   const { responses } = req.body;
-  Rooms.submit(roomID, user, responses).then(() => {
+
+  try {
+    await Rooms.submit(roomID, user, responses);
     res.json({ message: 'Submitted successfully' });
-  }).catch((err) => {
+  } catch (err) {
     res.status(500).json(`${err}`);
-  });
+  }
 });
 
-app.post('/create', (req, res) => {
+app.post('/room', async (req, res) => {
   const roomInitInfo = req.body;
-  Rooms.createRoom(roomInitInfo).then((result) => {
-    res.send(result);
-  }).catch((err) => {
+
+  try {
+    const result = await Rooms.createRoom(roomInitInfo);
+    res.json(`Created room with id: ${result.id}`);
+  } catch (err) {
     res.status(500).json({ err });
-  });
+  }
+});
+
+app.delete('/room/:id', async (req, res) => {
+  const roomID = req.params.id;
+  try {
+    await Rooms.deleteRoom(roomID);
+    res.json({ message: `Room ${roomID} deleted successfully` });
+  } catch (err) {
+    res.status(500).json({ err });
+  }
 });
 
 // START THE SERVER

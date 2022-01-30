@@ -15,8 +15,8 @@ const SubmissionSchema = new Schema({
 // schema
 const RoomSchema = new Schema({
   creator: String,
-  questions: [{ prompt: String }],
-  answers: [{ solution: String }],
+  questions: [String],
+  answers: [String],
   submissions: [SubmissionSchema],
 }, {
   toObject: { virtuals: true },
@@ -30,7 +30,7 @@ RoomSchema.virtual('scoreboard').get(function generateScoreboard() {
   this.submissions.forEach((submission) => {
     let numCorrect = 0;
     submission.responses.forEach((response, index) => {
-      if (response === solutions[index].solution) {
+      if (response === solutions[index]) {
         numCorrect += 1;
       }
     });

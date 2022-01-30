@@ -10,25 +10,28 @@ export const createRoom = (roomInitInfo) => {
   return newRoom.save();
 };
 
+export const deleteRoom = (roomID) => {
+  return Room.findByIdAndDelete(roomID);
+};
+
 export const getRoomInfo = (roomID) => {
   return Room.findById(roomID);
 };
 
-export const getScoreboard = (roomID) => {
-  return Room.findById(roomID).then((room) => {
-    return room.scoreboard;
-  });
+export const getAllRooms = () => {
+  return Room.find({});
 };
 
-export const submit = (roomID, user, responses) => {
-  return Room.findById(roomID).then((room) => {
-    room.submissions.push({
-      user,
-      responses,
-    });
+export const getScoreboard = async (roomID) => {
+  const room = await Room.findById(roomID);
+  return room.scoreboard;
+};
 
-    return room.save();
-  }).catch((err) => {
-    throw new Error('issue submitting responses');
+export const submit = async (roomID, user, responses) => {
+  const room = await Room.findById(roomID);
+  room.submissions.push({
+    user,
+    responses,
   });
+  return room.save();
 };
