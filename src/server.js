@@ -60,10 +60,10 @@ app.get('/scoreboard/:id', (req, res) => {
 
 app.post('/submit/:id', (req, res) => {
   const roomID = req.params.id;
-  const user = req.body.user;
-  const responses = req.body.responses;
+  const { user } = req.body;
+  const { responses } = req.body;
   Rooms.submit(roomID, user, responses).then(() => {
-    res.json({message: 'Submitted successfully'});
+    res.json({ message: 'Submitted successfully' });
   }).catch((err) => {
     res.status(500).json(`${err}`);
   });
