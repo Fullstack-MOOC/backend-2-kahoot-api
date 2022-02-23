@@ -8,7 +8,8 @@ comment_term: placeholder
 
 ## Overview
 
-In this assignment, we will be building on the skills you learned in the express-mongo assignment top build an replica of the API for the quiz website Kahoot. The assignment will help you practice more complex database and api design techniques and help you learn how to test a backend without using a frontend.
+
+In this assignment, we will be building on the skills you learned in the [first backend assignment](https://cs52.me/assignments/sa/server-side/#some-setup) to build a replica of the API for the quiz website Kahoot. The assignment will help you practice more complex database and API design techniques and help you learn how to test a backend without using a frontend.
 
 <!-- <video loop autoplay mute controls>
   <source src="http://res.cloudinary.com/dali-lab/video/upload/ac_none,w_804,h_383/v1546203223/cs52/cs52_polling_SA.webm" type="video/webm"/>
@@ -21,7 +22,7 @@ In this assignment, we will be building on the skills you learned in the express
 
 ### Database (Mongo)
 
-Make sure you have followed the setup from the [backend assignment one](https://cs52.me/assignments/sa/server-side/#some-setup) to install mongodb.
+Make sure you have followed the setup from the [backend assignment 1](https://cs52.me/assignments/sa/server-side/#some-setup) to install mongodb.
 
 On OSX something like this should work:
 
@@ -35,17 +36,17 @@ brew install mongodb-community
 
 Now, go ahead and pull the backend starterpack that contains the pacakges and boilerplate needed for a express and mongo backend.
 
-We're going to be building an api, where users can make requests to create or respond to quizzes. We will be using [backend assignment one](https://github.com/dartmouth-cs52/express-babel-starter) to start. This is a very simple starterpack we are providing. Mostly this sets us up with an `express` node server with a tiny bit of boiler plate as well as linting and babel.  You could easily recreate this, but for now we'll save you some time by providing it for you.
+We're going to be building an API, where users can make requests to create or respond to quizzes. We will be using [backend assignment 1](https://github.com/dartmouth-cs52/express-babel-starter) to start, which sets us up with an `express` node server with a tiny bit of boilerplate as well as linting and babel. You could easily recreate this, but for now we'll save you some time by providing it for you.
 
-🚀 This is similar to cloning a repo with `git clone`, but with a key discrepancy. Instead of cloning from one remote location, we will add a new "remote" (basically a reference to a repo hosted on Github) so that we can pull code from there but also retain the reference to our repo for this project. That way, we don't modify the starterpack when we want to push our changes to Github.
+🚀 This is similar to cloning a repo with `git clone`, but with a key difference. Instead of cloning from one remote location, we will add a new "remote" (basically a reference to a repo hosted on Github) so that we can pull code from there but also retain the reference to our repo for this project. That way, we don't modify the starterpack when we want to push our changes to Github.
 
 ```bash
-#make sure you are in your project directory
-git remote add starter git@github.com:dartmouth-cs52/express-babel-starter.git
+# make sure you are in your project directory
+git remote add starter STARTER_REPO_URL
 git pull starter main
 ```
 
-Then run these following commands to start our new node+express app in dev reloading mode.
+Then run these following commands in your project directory to start our new node+express app in dev reloading mode.
 
 ```bash
 npm install
@@ -56,7 +57,7 @@ npm start
 
 [Express](https://expressjs.com/) is a **server side** web framework for Node.js.  What it does for us is provide a way to listen for and respond to incoming web requests. Today, we will be creating API endpoints to respond to certain CRUD-style requests.
 
-Recall that the `src/server.js` file is the entry point for our api. Note how we are setting the route:
+Recall that the `src/server.js` file is the entry point for our API. Note how we are setting the route:
 
 ```javascript
 // default index route
@@ -64,56 +65,56 @@ app.get('/', (req, res) => {
   res.send('hi');
 });
 ```
-The 2nd parameter to `.get()` is a function that takes 2 arguments:  request and response.
 
-Request is an express object that contains, among other things, any data that was part of the request. For instance, the JSON parameters we would POST or PUT in our asynchronous `axios` calls would be available as `req.body.parameterName`.
+The 2nd parameter to `.get()` is a function that takes 2 arguments: `request` and `response`.
 
-Response is another special express object that contains, among other things, a method named `send` that allows us a send back a response to the client.  When your api call gets back JSON data this is how it is returned.  Consider `res.send()` the equivalent of a network based `return` statement. This is important. You can only have **1** `res.send()`. 
+`request` is an express object that contains, among other things, any data that was part of the request. For instance, the JSON parameters we would POST or PUT in our asynchronous `axios` calls would be available as `req.body.parameterName`.
+
+`response` is another special express object that contains, among other things, a method named `send` that allows us a send back a response to the client.  When your API call gets back JSON data this is how it is returned.  Consider `res.send()` the equivalent of a network based `return` statement. This is important. You can only have **1** `res.send()`. Note that it is good practice to `return res.send()` unless you intend to run code after sending the response.
 
 We'll add more routing in shortly, but first let's set up our database!
 
 ## Mongo Database Server
 
-We will need a database to store the information aboout the kahoot quizzes and the responses from players.  For this version of the assignment, we will be using the non-relational [MongoDB](https://www.mongodb.com/) as our database. We've already installed `mongodb` using Homebrew.
+We will need a database to store the information aboout the kahoot quizzes and the responses from players. For this version of the assignment, we will be using the non-relational [MongoDB](https://www.mongodb.com/) as our database. We've already installed `mongodb` using Homebrew.
 
-In assignment ~~NNN~~, you will replicate the api with [PostgreSQL](https://www.postgresql.org/), a relational database.
+In assignment ~~NNN~~, you will replicate the API with [PostgreSQL](https://www.postgresql.org/), a relational database.
 
  🚀 You may need to run the `brew services start mongodb-community` process, which your node app will connect to.  This is a background server process. 
 
-
 Recall you can interface with your database from the commandline using the mongo shell with the command `mongo`.  You can also play around with a more graphical client [mongodb compass community](https://www.mongodb.com/download-center?jmp=nav#compass) (just make sure to download the *community* version).
-
-Ok, so now you've played a little bit with mongo directly, let's build something on top of it.
 
 ## Mongoose
 
 <!-- ![](img/mongoose.jpg){: .small .fancy } -->
 
-To connect to mongo in our app, we will use a module called `mongoose`. [Mongoose](http://mongoosejs.com/) is a an object model for mongo. This allows us to treat data that we are storing in mongo as objects that have a nice API for querying, saving, validating, etc.  Mongo is in general considered a schema-less store.  We store JSON documents in a large object tree similarly to firebase. However, with Mongoose we are able to specify a schema for our objects.  This is purely in code and allows use to validate and assert our data before inserting it into the database.
+To interface with mongo for our API, we will use a module called `mongoose`. [Mongoose](http://mongoosejs.com/) is a an object model for mongo. This allows us to treat data that we are storing in mongo as objects that have a nice API for querying, saving, validating, etc. rather than writing Mongo queries directly. Mongo is in general considered a schema-less store.  We store JSON documents in a large object tree similarly to firebase. However, with Mongoose we are able to specify a schema for our objects.  This is purely in code and allows use to validate and assert our data before inserting it into the database to protect us from pesky bugs.
 
 🚀 Install mongoose:  `npm install mongoose`
 
-🚀 And add just a little bit of code to get mongoose initialized with our database in `server.js`:
+🚀 Add this snippet to get mongoose initialized with our database at the bottom of `server.js`. We will wrap this in an anonymous `async` function so that we can `await` our call to connect to the database:
 
 ```javascript
 import mongoose from 'mongoose';
 
 // DB Setup
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/cs52poll';
+(async () => {
+  // connect mongo
+  const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/kahootAPI';
+  await mongoose.connect(mongoURI);
 
-mongoose.connect(mongoURI).then(() => {
-  console.log('connected to database:', mongoURI);
-}).catch((err) => {
-  console.log('error: could not connect to db:', err);
-});
-
+  // start listening
+  app.listen(port, () => {
+    console.log(`Listening on port ${port}`);
+  });
+})();
 ```
 
 ## Models
 
-We're going to create a data model to work with.   A data model in mongoose is initialized from a schema, which is a description of the structure of the object.  This is much more like what you might be familiar with statically typed classes in Java.
+We're going to create a data model to work with. A data model in mongoose is initialized from a schema, which is a description of the structure of the object. This is much more like what you might be familiar with statically typed classes in Java.
 
-🚀 Create a directory `src/models` and a file inside this directory named `room_moodel.js`. This is very similar to the express-mongo assignment.
+🚀 Create a directory `src/models` and a file inside this directory named `room_model.js`. This is very similar to the express-mongo assignment.
 
 
 ```javascript
@@ -137,6 +138,13 @@ const RoomModel = mongoose.model('Room', RoomSchema);
 export default RoomModel;
 ```
 
+Take a look at the `submissions` field of the `Room` model above. We know that the `questions` and `answers` fields should both be the same length, since each answer corresponds to one question. We could validate that these two fields have the same number of elements when a user tries to create a game, but why not combine these two fields into an array of nested documents. Our model will look a lot cleaner, and we will get the validation for free!
+
+We also know that the submissions to a room will be an array, in this case an array of responses from various different players. Don't we also want to check that the submissions follow the correct format? Otherwise, players could submit more answers than the number of questions or submit the wrong type of data in response to the questions. This might cause problems when we later try to evaluate the submissions.
+
+To solve this issue, also create a file `submission_model.js` that contains a `SubmissionModel`. This represents a submission (a series of answers to the room's questions) by one player. The submission will indicate the player who submitted the response and the responses themselves.
+
+While including the the `SubmissionSchema` directly in the `RoomSchema` would work just fine, it would also mean that all the submissions would be stored inside with the rooms that they are for. For the purpose of this assignment, we are going to take a different approach, using mongoose's `populate()` function to retrieve the submission information only when we need it and storing the submissions in a separate collection. This will become more clear once we write the controllers for rooms and submissions.
 
 ```javascript
 const SubmissionSchema = new Schema({
@@ -150,195 +158,166 @@ const SubmissionSchema = new Schema({
   toJSON: { virtuals: true },
   timestamps: true,
 });
-
 ```
 
-There's a bit of stuff going on here.  We're creating a new PollSchema - this is a definition of what fields our Poll document should have. We're also enabling *virtuals* on our schema which allows us to have a computed field `score` that is returned with our object but doesn't need to be stored explicitly.
+Now, let's update the `RoomSchema` to include our new combined question/answer format and submission schema.
 
-From this schema we create a Poll class or model which we can use in other files to perform queries on our database!  Mongoose models give us a familiar code based approach to database queries.
+```javascript
+import mongoose, { Schema } from 'mongoose';
+
+// schema
+const RoomSchema = new Schema({
+  creator: String,
+  questions: [{ prompt: String, answer: String }],
+  submissions: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Submission',
+  }],
+}, {
+  toObject: { virtuals: true },
+  toJSON: { virtuals: true },
+  timestamps: true,
+});
+
+// class
+const RoomModel = mongoose.model('Room', RoomSchema);
+
+export default RoomModel;
+```
+
+Finally, let's add a *virtual* to our room schema to compute the "scoreboard" to compare how players are performing in a given game. Add the following code to the bottom of `room_model.js`:
+
+```javascript
+function generateScoreboard() {
+  const scoreboard = this.submissions.map((submission) => {
+    let numCorrect = 0;
+    submission.responses.forEach((response, index) => {
+      if (response === this.questions[index].answer) {
+        numCorrect += 1;
+      }
+    });
+    return { Player: `${submission.player}`, 'Correct Answers': `${numCorrect}` };
+  });
+
+  // sort the scoreboard by decreasing number of correct answers
+  scoreboard.sort().reverse();
+  return scoreboard;
+}
+
+RoomSchema.virtual('scoreboard').get(generateScoreboard);
+```
 
 ## Controllers  
 
-🚀 Create a directory `src/controllers` and a file inside this named `room_controller.js`.  This controller will be responsible for handling all the requests related to rooms (aka games) for our api:
+🚀 Create a directory `src/controllers` and a file inside this named `room_controller.js`.  This controller will be responsible for handling all the requests related to rooms (aka games) for our API:
 
 ```javascript
-import Poll from '../models/poll';
-
-
-export const getPolls = () => {
-  // should return a promise that returns a list of polls
+export const createRoom = (roomInitInfo) => {
+    
 };
 
-export const createPoll = (poll) => {
-  // takes in an object with the fields that poll should shave
-  // and saves them to the database
-  // returns a promise
+export const deleteRoom = (roomID) => {
+    
 };
 
-export const vote = (pollID, upvote) => {
-  // takes in the poll id to update and a boolean of whether
-  // to update or not.
-  // returns a promise
-}
+export const getRoomInfo = (roomID) => {
+
+};
+
+export const getAllRooms = () => {
+
+};
+
+export const getScoreboard = async (roomID) => {
+  
+};
 ```
 
-All these methods do not do anything meaningful right now. Let's leave these methods now with filler and then deal with the details later.
+Also add a file `submission_controller.js` that will handle submissions-related requests.
+
+```javascript
+export const submit = async (roomID, user, responses) => {
+    
+};
+```
+
+These are empty right now, but we will come back to them soon.
 
 ### Routing
 
-Now we are ready to wire our app all together with routes. We can create a separate routes file, but our application is pretty small, so we can store all of our routes in our `src/server.js`:
-
-For example we could define a `path/:id` route like below:
+Before we finish the controllers, let's finish our routes. In the first assignment, we put our routes in `src/server.js`, now we'll move them out to a new file, `src/routes.js`:
 
 ```javascript
-// example only!
-// ----------------------------------------------------
-app.get('/polls/:id', (req, res) => {
-  /* for POST you would use req.body for fields */
-  /* req.params.id would have the :id part of the route */
-  /* someMethod */
-});
-```
-{: .example}
-
-
-Note `/*someMethod*/` is just a comment, you would call a method there that calls our controller methods — more on that shortly!
-
-Ok, remember how we defined all our API endpoints in our controller?  Let's map them in our router. You have access to methods on app `.get()`, `.post()`, and others that we won't be using.  
-
-🚀 Use syntax similar to the above to make routes to map to the following to `src/server.js`:
-
-* GET `/`: Call polls.getPolls and render `index` in the callback:
-
-```js
-Polls.getPolls().then((polls) => {
-  res.render('index', { polls });
-}).catch((error) => {
-  res.send(`error: ${error}`);
-});
-```
-
-*Note: in case of error right now we're just sending back a single string with the error. Not very robust!*
-
-* GET `/new`:  render the `new` page in the callback.
-
-```js
-res.render('new');
-```
-
-* POST `/new`: Call `Polls.createPoll()` and redirect to `/` on success.
-
-```js
-const newpoll = {
-  text: req.body.text,
-  imageURL: req.body.imageURL,
-};
-Polls.createPoll(newpoll).then((poll) => {
-  res.redirect('/');
-});
-```
-
-* POST `/vote/:id`: Call `Polls.vote()` and return success, we will use this to upvote/downvote.
-
-```js
-const vote = (req.body.vote === 'up');// convert to bool
-Polls.vote(req.params.id, vote).then((result) => {
-  res.send(result);
-});
-```
-
-Note: `req.params.id` - where is that coming from? Similarly to how the routing works in react, the `:id` defined in the route!
-
-🚀  Don't forget to import our Poll controller functions:
-
-```javascript
-import * as Polls from './controllers/poll_controller';
-```
-
-## Controller Continued
-
-Ok, but our controller `controllers/poll_controller.js` is fairly useless.  We have everything wired, but we need to actually store stuff.
-
-### getPoll
-
-We should first implement the `getPolls` endpoint.
-
-🚀 We just use our `Poll` Mongoose model schema to get all the polls in the Polls collection by calling the `.find()` method:
-
-```javascript
-export const getPolls = () => {
-  return Poll.find({});
-};
-```
-
-What is happening with the return above?  I thought we said we needed to return that *promise* thing? Turns out the mongoose `find()` method is a promise already, so we can just return it and use `.then()` in our route. Nice!
-
-🚀 Let's test this now and view the page at `http://localhost:9090/`. They should show our two polls that we created in the `mongo` shell.
-
-Now that we have the `getPolls` method working, we have to use more database methods (all of them can be found in the [mongoose docs](http://mongoosejs.com/docs/queries.html))
-to implement the `createPoll` and `vote` methods.
-
-### createPoll
-
-The createPoll function should take in an Object with `text` and `imageURL` fields. It will then instantiate a new Poll object, assign some values, and save.
-
-🚀 Like so:
-
-```js
-export const createPoll = (poll) => {
-  const p = new Poll();
-  p.text = poll.text;
-  p.imageURL = poll.imageURL;
-  return p.save();
-};
-```
-
-Note: `save` is a promise too! We were able to instantiate a new Poll easily with the `new` keyword just like a class, very nice.
-
-### vote
-
-The final controller function we need should take in a poll id and also whether to upvote or downvote. Let's take this argument in as a boolean.  At least that is one way to do it.  We will use the poll id to find the specific poll using `.findOne()`.
-
-```js
-export const vote = (pollID, upvote) => {
-  return Poll.findOne({ _id: pollID }).then((poll) => {
-    console.log(`updating vote: ${poll} ${upvote}`);
-    if (upvote) {
-      poll.upvotes += 1;
-    } else {
-      poll.downvotes += 1;
+// default index route
+router.route('/rooms')
+  .get(async (req, res) => {
+    try {
+      const rooms = await Rooms.getAllRooms();
+      return res.json(rooms);
+    } catch (err) {
+      return res.status(500).json(`${err}`);
     }
-    return poll.save();
+  })
+  .post(async (req, res) => {
+    const roomInitInfo = req.body;
+
+    try {
+      const result = await Rooms.createRoom(roomInitInfo);
+      return res.json(`Created room with id: ${result.id}`);
+    } catch (err) {
+      return res.status(500).json({ err });
+    }
   });
-};
-```
 
-This one is a bit more complicated, we have to find the specific vote and set some fields and then save it.  Note how here we are both returning a promise but also have a `.then`.  Since you can chain them you can return a promise plus a then and that is still a promise.
+router.route('/rooms/:id')
+  .get(async (req, res) => {
+    const roomID = req.params.id;
+    try {
+      const roomInfo = await Rooms.getRoomInfo(roomID);
+      return res.json(roomInfo);
+    } catch (err) {
+      return res.status(404).send(`ERROR: ${err}`);
+    }
+  })
+  .delete(async (req, res) => {
+    const roomID = req.params.id;
+    try {
+      await Rooms.deleteRoom(roomID);
+      return res.json({ message: `Room ${roomID} deleted successfully` });
+    } catch (err) {
+      return res.status(500).json({ err });
+    }
+  });
 
-
-## Upvote / Downvote
-
-We now have all the server endpoints in place to add upvote/downvote capability, we just need to call our `vote/:id` endpoint from the frontend.
-
-🚀 Let's add the following to the very bottom of our `index.ejs` file.  It will enable our upvote / downvote buttons to actually work.
-
-```js
-<script>
-$('.vote').click(function(event) {
-  var vote=$(event.currentTarget).data('vote');
-  var id=$(event.currentTarget).data('id');
-  $.ajax({
-    type: "POST",
-    url: "/vote/"+id,
-    data: {vote}
-  }).done(function() {location.reload()});
+router.get('/rooms/:id/scoreboard', async (req, res) => {
+  const roomID = req.params.id;
+  try {
+    const scoreboard = await Rooms.getScoreboard(roomID);
+    return res.json(scoreboard);
+  } catch {
+    return res.status(404).json({ message: 'Room not found' });
+  }
 });
-</script>
+
+router.post('/rooms/:id/submission', async (req, res) => {
+  const roomID = req.params.id;
+  const { player, responses } = req.body;
+
+  try {
+    await Rooms.submit(roomID, player, responses);
+    return res.json({ message: 'Submitted successfully' });
+  } catch (err) {
+    return res.status(500).json(`${err}`);
+  }
+});
+
+export default router;
 ```
 
-In the above we make an ajax call to the server to update the fields, and then we just reload the page. There are better ways of updating our display but for now this should suffice!  What is a problem with this approach that we wouldn't have if we used React?
+## Back to Controllers
 
-Note that since we are building the API *only* in this assignment, we will not need to worry about any views like we had in the first backend assignment. Nice!
+Now we'll finish the controllers 
+
 
 ## Deploy to Heroku
 
@@ -383,15 +362,4 @@ To test it out, click *Open App* at the top right. That is the url that your her
 
 ![](img/test.jpg){: .small .fancy}
 
-You can also view server logs and restart the server from there, where can be very useful in debuggin.
-
-
-## To Turn In
-
-1. github url to your repo
-1. url to your new heroku app instance
-
-## Extra Credit
-
-1. How might you delete polls?
-1. What about preventing people from voting multiple times using cookies or localstorage? not super secure but a first pass.
+You can also view server logs and restart the server from there, where can be very useful in debugging.
