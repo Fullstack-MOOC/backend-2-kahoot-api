@@ -34,12 +34,16 @@ app.use('', router);
 const port = process.env.PORT || 9090;
 
 (async () => {
-  // connect mongo
-  const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/kahootApi';
-  await mongoose.connect(mongoURI);
+  try {
+    // connect mongo
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/kahootApi';
+    await mongoose.connect(mongoURI);
 
-  // start listening
-  app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-  });
+    // start listening
+    app.listen(port, () => {
+      console.log(`Listening on port ${port}`);
+    });
+  } catch (error) {
+    console.error(error);
+  }
 })();

@@ -4,25 +4,23 @@ title: Backend 2 - Kahoot API
 published: false
 comment_term: placeholder
 ---
-<!-- ![](img/enm.jpg){: .small } -->
+
+# Backend 2 - Kahoot API
+
+
+![](img/kahoot.png)
 
 ## Overview
 
+In this assignment we will augment our frontend knowledge of creating beutiful websites by learning how to design backends, the designs that provide your sites with data and handle complex logic. You will build a replica of the API for the quiz website [Kahoot](https://kahoot.com/). The assignment will help you practice more complex database and API design techniques and help you learn how to test a backend without using a frontend.
 
-In this assignment, we will be building on the skills you learned in the [first backend assignment](https://cs52.me/assignments/sa/server-side/#some-setup) to build a replica of the API for the quiz website Kahoot. The assignment will help you practice more complex database and API design techniques and help you learn how to test a backend without using a frontend.
-
-<!-- <video loop autoplay mute controls>
-  <source src="http://res.cloudinary.com/dali-lab/video/upload/ac_none,w_804,h_383/v1546203223/cs52/cs52_polling_SA.webm" type="video/webm"/>
-  <source src="http://res.cloudinary.com/dali-lab/video/upload/ac_none,w_804,h_383/v1546203223/cs52/cs52_polling_SA.mp4" type="video/mp4"/>
-  <source src="http://res.cloudinary.com/dali-lab/video/upload/ac_none,w_804,h_383/v1546203223/cs52/cs52_polling_SA.ogv" type="video/ogg"/>
-  Your browser does not support HTML5 video tags
-</video> -->
+<!-- Perhaps some video of the final product could go here -->
 
 ## Setup
 
 ### Database (Mongo)
 
-Make sure you have followed the setup from the [backend assignment 1](https://cs52.me/assignments/sa/server-side/#some-setup) to install mongodb.
+First, you need to install mongodb, the database client for this API.
 
 On OSX something like this should work:
 
@@ -36,15 +34,16 @@ brew install mongodb-community
 
 Now, go ahead and pull the backend starterpack that contains the pacakges and boilerplate needed for a express and mongo backend.
 
-We're going to be building an API, where users can make requests to create or respond to quizzes. We will be using [backend assignment 1](https://github.com/dartmouth-cs52/express-babel-starter) to start, which sets us up with an `express` node server with a tiny bit of boilerplate as well as linting and babel. You could easily recreate this, but for now we'll save you some time by providing it for you.
+We're going to be building an API, where users can make requests to create or respond to quizzes. We will be using [a backend starterpack](https://github.com/dartmouth-cs52/express-babel-starter) to start, which sets us up with an `express` node server with a tiny bit of boilerplate as well as linting and babel. You could easily recreate this, but for now we'll save you some time by providing it for you.
 
 🚀 This is similar to cloning a repo with `git clone`, but with a key difference. Instead of cloning from one remote location, we will add a new "remote" (basically a reference to a repo hosted on Github) so that we can pull code from there but also retain the reference to our repo for this project. That way, we don't modify the starterpack when we want to push our changes to Github.
 
 ```bash
 # make sure you are in your project directory
-git remote add starter STARTER_REPO_URL
+git remote add starter https://github.com/dartmouth-cs52/express-babel-starter
 git pull starter main
 ```
+You may have to add the `--allow-unrelated-histories` flag to the `git pull` command if you get an error about the histories not being related. 
 
 Then run these following commands in your project directory to start our new node+express app in dev reloading mode.
 
@@ -78,7 +77,7 @@ We'll add more routing in shortly, but first let's set up our database!
 
 We will need a database to store the information aboout the kahoot quizzes and the responses from players. For this version of the assignment, we will be using the non-relational [MongoDB](https://www.mongodb.com/) as our database. We've already installed `mongodb` using Homebrew.
 
-In assignment ~~NNN~~, you will replicate the API with [PostgreSQL](https://www.postgresql.org/), a relational database.
+<!-- In assignment ~~NNN~~, you will replicate the API with [PostgreSQL](https://www.postgresql.org/), a relational database. -->
 
  🚀 You may need to run the `brew services start mongodb-community` process, which your node app will connect to.  This is a background server process. 
 
@@ -114,7 +113,7 @@ import mongoose from 'mongoose';
 
 We're going to create a data model to work with. A data model in mongoose is initialized from a schema, which is a description of the structure of the object. This is much more like what you might be familiar with statically typed classes in Java.
 
-🚀 Create a directory `src/models` and a file inside this directory named `room_model.js`. This is very similar to the express-mongo assignment.
+🚀 Create a directory `src/models` and a file inside this directory named `room_model.js`.
 
 
 ```javascript
@@ -126,10 +125,6 @@ const RoomSchema = new Schema({
   questions: [String],
   answers: [String],
   submissions: [],
-}, {
-  toObject: { virtuals: true },
-  toJSON: { virtuals: true },
-  timestamps: true,
 });
 
 // class
@@ -140,25 +135,31 @@ export default RoomModel;
 
 Take a look at the `submissions` field of the `Room` model above. We know that the `questions` and `answers` fields should both be the same length, since each answer corresponds to one question. We could validate that these two fields have the same number of elements when a user tries to create a game, but why not combine these two fields into an array of nested documents. Our model will look a lot cleaner, and we will get the validation for free!
 
-We also know that the submissions to a room will be an array, in this case an array of responses from various different players. Don't we also want to check that the submissions follow the correct format? Otherwise, players could submit more answers than the number of questions or submit the wrong type of data in response to the questions. This might cause problems when we later try to evaluate the submissions.
+We also know that the submissions to a room will be an array, in this case an array of responses from various different players. We should also check that the submissions follow a consistent format. Otherwise, players could submit more answers than the number of questions or submit the wrong type of data in response to the questions. This might cause problems when we later try to evaluate the submissions.
 
-To solve this issue, also create a file `submission_model.js` that contains a `SubmissionModel`. This represents a submission (a series of answers to the room's questions) by one player. The submission will indicate the player who submitted the response and the responses themselves.
+To solve this issue, also create a file `submission_model.js` that contains a `SubmissionModel`. This represents a submission (a series of answers to the room's questions) by one player. The submission will indicate the player who submitted the response and the responses themselves. The `player` field is a username string (used only for that room) that we let each player define. Right now, there could be duplicates in a given room.
 
-While including the the `SubmissionSchema` directly in the `RoomSchema` would work just fine, it would also mean that all the submissions would be stored inside with the rooms that they are for. For the purpose of this assignment, we are going to take a different approach, using mongoose's `populate()` function to retrieve the submission information only when we need it and storing the submissions in a separate collection. This will become more clear once we write the controllers for rooms and submissions.
+EC: What type of validation might we want on usernames? (Think about things like special characters and even profanity 😳.) What would we have to do if we wanted usernames to persist across rooms? Try to implement some of these improvements.
+
+Now that we have multiple schemas, we have a few choice. On option is to use mongoose's `populate()` function to retrieve the submission information only when we need it and store the submissions in a separate collection. Another is to just make the `submissions` field of each room an array of `SubmissionSchema` instances, so the room knows all the information about players' submissions to it. Later, we will generate a scoreboard for the room based on the submissions. This will be easier if we take the second approach of bundling the submissions with each room. Write a `SubmissionSchema` above your `RoomSchema` to reflect this:
 
 ```javascript
 const SubmissionSchema = new Schema({
-  user: {
+  roomId: {
+    type: String,
+    required: true,
+  },
+  player: {
     type: String,
     required: true,
   },
   responses: [String],
 }, {
-  toObject: { virtuals: true },
-  toJSON: { virtuals: true },
   timestamps: true,
 });
 ```
+
+We hope you do not leave this assignment thinking that there are not alternative approaches. We could have the submissions stored in their own collection or even have the rooms not store any information about which submissions they own and instead have the *submissions* know the rooms to which they belong. All of these are valid, but here we chose to keep the submission information bundled with the rooms because it helped us another feature (the soon-to-be-completed scoreboard) more straightforward. You will often face design decisions without clear "correct" answers in your projects and will have the chance to use your creativity to make the choice that makes sense to you!
 
 Now, let's update the `RoomSchema` to include our new combined question/answer format and submission schema.
 
@@ -169,14 +170,7 @@ import mongoose, { Schema } from 'mongoose';
 const RoomSchema = new Schema({
   creator: String,
   questions: [{ prompt: String, answer: String }],
-  submissions: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Submission',
-  }],
-}, {
-  toObject: { virtuals: true },
-  toJSON: { virtuals: true },
-  timestamps: true,
+  submissions: [SubmissionSchema],
 });
 
 // class
@@ -212,6 +206,8 @@ RoomSchema.virtual('scoreboard').get(generateScoreboard);
 🚀 Create a directory `src/controllers` and a file inside this named `room_controller.js`.  This controller will be responsible for handling all the requests related to rooms (aka games) for our API:
 
 ```javascript
+import Room from '../models/room_model';
+
 export const createRoom = (roomInitInfo) => {
     
 };
@@ -224,18 +220,10 @@ export const getRoomInfo = (roomID) => {
 
 };
 
-export const getAllRooms = () => {
-
-};
-
 export const getScoreboard = async (roomID) => {
   
 };
-```
 
-Also add a file `submission_controller.js` that will handle submissions-related requests.
-
-```javascript
 export const submit = async (roomID, user, responses) => {
     
 };
@@ -243,11 +231,14 @@ export const submit = async (roomID, user, responses) => {
 
 These are empty right now, but we will come back to them soon.
 
-### Routing
+## Routing
 
-Before we finish the controllers, let's finish our routes. In the first assignment, we put our routes in `src/server.js`, now we'll move them out to a new file, `src/routes.js`:
+Before we finish the controllers, let's define our routes. Each route defines a url that a client of the API can hit to either retrieve data or send new data to be stored. Our API will listen to requests at these routes and respond accordingly, usually by calling one of the controller methods we defined above. With only a few routes, it makes sense to keep them in `src/server.js`, but now we'll move routes out to their own file, `src/routes.js`:
 
 ```javascript
+import { Router } from 'express';
+import * as Rooms from './controllers/room_controller';
+
 // default index route
 router.route('/rooms')
   .get(async (req, res) => {
@@ -263,7 +254,7 @@ router.route('/rooms')
 
     try {
       const result = await Rooms.createRoom(roomInitInfo);
-      return res.json(`Created room with id: ${result.id}`);
+      return res.json(`Created room with id: ${result.id}. Remember to save your room key!`);
     } catch (err) {
       return res.status(500).json({ err });
     }
@@ -305,7 +296,7 @@ router.post('/rooms/:id/submission', async (req, res) => {
 
   try {
     await Rooms.submit(roomID, player, responses);
-    return res.json({ message: 'Submitted successfully' });
+    return res.json({ message: `Submitted successfully. You got ${numCorrect} questions correct.` });
   } catch (err) {
     return res.status(500).json(`${err}`);
   }
@@ -314,25 +305,237 @@ router.post('/rooms/:id/submission', async (req, res) => {
 export default router;
 ```
 
+Recall that, when we reference `req.params.id`, the `:id` defined in the route. When the user makes a GET request to the route `rooms/33`, for example, `req.params.id` is 33.
+
+🚀  Running into trouble? Don't forget to import your Room and Submission controller functions:
+
+```javascript
+import * as Rooms from './controllers/room_controller';
+import * as Submissions from './controllers/submission_controller';
+```
+
 ## Back to Controllers
 
-Now we'll finish the controllers 
+Now we'll finish the controllers for both the submissions and rooms.
+
+### createRoom
+
+We should first implement the `createRoom` endpoint. Without any rooms, we can't play!
+
+🚀 We use the `new` keyword to initialize a new room, then give it the appropriate properties and save it using the `.save()` method:
+
+```javascript
+export const createRoom = (roomInitInfo) => {
+  const newRoom = new Room();
+  newRoom.creator = roomInitInfo.creator;
+  newRoom.questions = roomInitInfo.questions;
+  newRoom.answers = roomInitInfo.answers;
+  newRoom.submissions = [];
+
+  return newRoom.save();
+};
+```
+
+The `.save()` method returns a promise, so we can `await` this method when we call it.
+
+🚀 Let's see if this works! For this assignment, we do not have a frontend, so we will instead use [Postman](https://www.postman.com/) to test our API. Postman is a tool that lets us make requests to an API. You can download Postman as a desktop app or just use the web interface by creating an account and navigating to [web.postman.co](web.postman.co). **When you are testing locally on your machine, you cannot use the web interface and should instead use the desktop app.**
+
+Start up your API and, using Postman, test that creating a room via a post to `localhost:9090/rooms` with a properly formatted body returns a success message.
+
+### deleteRoom
+
+🚀The complement to creating a room is deleting it. Write the `deleteRoom` method to handle this.
+
+```js
+export const deleteRoom = (roomID) => {
+  return Room.findByIdAndDelete(roomID);
+};
+```
+
+### getRoomInfo
+
+We need an endpoint for two groups to be able to access the information about a room: the room creator/administrator and the players participating in that room. The issue is that these groups have different privileges in terms of what they should be allowed to know about a room.
+
+The creator should obviously be able to see all of the associated data to make sure they have set up the room correctly or to see what participants have submitted. The players, however, should only be able to see the questions (so they can submit answers to them!) and the scoreboard (to see how they are doing). You can imagine the game would be pretty boring if players got the answers alongside the questions.
+
+Therefore, we need some way to return different information to these two different parties. We could have two different endpoints, but there is a risk that the route for the "creator" endpoint is accidentally exposed, which would lead to cheating. Instead, we can have an optional query parameter that is a "password" to access the extra, protected information about the room. The creator will specify the parameter when creating the room and include it in subsequent requests to this endpoint. Depending if a request to GET `rooms/:id` has a password (and it is correct), we can pass the request to two different controller methods.
+
+To support this behavior, we will need to modify our `rooms/:id` route:
+
+```js
+const roomID = req.params.id;
+const { roomKey } = req.query;
+if (roomKey) {
+  try {
+    const room = await Rooms.getAllRoomInfo(roomID, roomKey);
+    return res.json(room);
+  } catch (err) {
+    return res.status(500).json({ err });
+  }
+} else {
+  try {
+    const roomInfo = await Rooms.getLimitedRoomInfo(roomID);
+    return res.json(roomInfo);
+  } catch (err) {
+    return res.status(500).json({ err });
+  }
+}
+```
+
+We will also need to split `getRoomInfo` into `getAllRoomInfo` and `getLimitedRoomInfo` as well.
+
+```js
+// for players checking the status of the game
+export const getLimitedRoomInfo = async (roomID) => {
+  return Room.findById(roomID, {
+    'questions.answer': 0, scoreboard: 0, submissions: 0, roomKey: 0,
+  });
+};
+
+// for room creators checking the status of the game or room properties
+export const getAllRoomInfo = async (roomID, roomKey) => {
+  const room = await Room.findById(roomID);
+  if (roomKey === room.roomKey) {
+    return room;
+  } else {
+    throw new Error(`Room key ${roomKey} does not match key for this room.`);
+  }
+};
+```
+
+ Finally, we will need to modify our model to store a key for the room in addition to the other room properties!
+
+ ```js
+const RoomSchema = new Schema({
+  creator: String,
+  questions: [{ prompt: String, answer: String }],
+  submissions: [SubmissionSchema],
+  roomKey: String,
+});
+```
+
+### getScoreboard
+
+We also need a way to access the scoreboard for a room. As we discussed earlier, the scoreboard is a *virtual* property that is not stored in the database, but can be retrieved when we ask for it.
+
+```js
+export const getScoreboard = async (roomID) => {
+  const room = await Room.findById(roomID);
+  return room.scoreboard;
+};
+```
+
+### submit
+
+Finally, we need a controller for player submissions. Players will include the information about their submissions in the body of a post request to the `/rooms/:id` endpoint. We will parse this to get the player's name and the answers they submitted. As a convenience, we will also send the user back the number of correct answers they got.
+
+```js
+export const submit = async (roomID, user, responses) => {
+  const newSubmission = {};
+  newSubmission.player = player;
+  newSubmission.responses = responses;
+  newSubmission.roomId = roomId;
+
+  // Add the submission ref to the room's submissions array
+  const room = await Room.findById(roomId);
+
+  const rightAnswers = room.questions;
+  let numCorrect = 0;
+  responses.forEach((response, index) => {
+    if (response === rightAnswers[index].answer) {
+      numCorrect += 1;
+    }
+  });
+
+  room.submissions.push(newSubmission);
+  await room.save();
+
+  return numCorrect;
+};
+```
+
+## Testing!
+
+As a refresher, to start up your local dev environment, you need to first start up the mongo database:
+```
+brew services start mongodb-community
+```
+
+Then, start your server. From the root of your project, run:
+```
+npm start
+```
+
+This should start a server on a port of your machine. Below we assumed this was port 9090, but mileage may vary. Please replace 9090 with the port you are using.
+
+We will test your API using Curl, a CLI for making web requests.
 
 
-## Deploy to Heroku
+### Create the game
+```bash
+curl --location --request POST 'http://localhost:9090/rooms' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "creator": "%YOUR USERNAME%",
+    "key": "secret",
+    "questions": [
+        {"prompt": "Who is the most legendary prof at Dartmouth?", "answer": "Tim Tregubov"},
+        {"prompt": "What is the best programming language?", "answer": "JavaScript"}
+        ]
+}'
+```
+This will return the room id, which you will definitely want to keep track of for future use!
 
-Great! We have everything working now. We will need to host this new server component! While this serves up a webpage, since it is a computed page it needs a live running server process (unlike the static hosting which serves up pre-computed files). Heroku is a lovely service that can host your javascript/node server program (as well as python, and others). 
+### Get the room info (as creator)
+```bash
+curl --location --request GET 'http://localhost:9090/rooms/%YOUR_ROOM_ID%?roomKey=secret' \
+--data-raw ''
 
-1. Head over to [Heroku](https://www.heroku.com/) and login/sign up. Then, create a new app.
-3. Go to *Deploy* and select either "Github" (strongly preferred) or "Heroku Git" as your Deployment Method
-    * if you choose GitHub, find and connect to the right repository, then turn on *Automatic Deploys* for the main branch. This will update Heroku whenever you `git push origin main` and restart your heroku server. This way is pretty automatic and you don't have to worry about remembering to push to heroku.
-    * if you are doing "Heroku Git", select Download and install the Heroku CLI using `brew install heroku/brew/heroku`. Given that you're already working in a git repository, use `heroku git:remote -a YOUR_HEROKU_APP` to add a new git remote (use `git remote -v` to see). If you haven't done so already, add and commit your changes. Now when you want to deploy do: `git push heroku main`. *Note: Don't forget to push main to **both** heroku and origin.* This way is more manual if you want greater control.
-4. Either way, once Heroku gets your push then it will run the npm command that is listed in your `Procfile` to launch your app.  COOL!
+### Get the room info (as player)
+```bash
+curl --location --request GET 'http://localhost:9090/rooms/%YOUR_ROOM_ID%' \
+--data-raw ''
+```
+
+### Submit answer for player 1
+```bash
+curl --location --request POST 'http://localhost:9090/rooms/%YOUR_ROOM_ID%' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "player": "Player 1",
+    "responses": [
+        "Tim Tregubov",
+        "Python"
+    ]
+}'
+```
+
+### Submit answer for player 2
+```bash
+curl --location --request POST 'http://localhost:9090/rooms/%YOUR_ROOM_ID%' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "player": "Player 2",
+    "responses": [
+        "Tim Tregubov",
+        "JavaScript"
+    ]
+}'
+```
+
+###  Look at the scoreboard to see who won!
+```bash
+curl --location --request GET 'http://localhost:9090/rooms/%YOUR_ROOM_ID%/scoreboard' \
+```
+
+
+## Deploy to Render?
+
 
 
 ## MongoDB Atlas 
 
-Wait, but we don't have a database on our remote server!  The problem is that Heroku does not support easy storage, there is no "hard drive" to save a database file on for instance. Every Heroku process (what runs your code every time you push), is called a Dyno - and Dynos don't get their own filesystems. They get what Heroku calls an [ephemeral filesystem](https://devcenter.heroku.com/articles/dynos#ephemeral-filesystem), more of a temporary scratchpad. 
+Wait, but we don't have a database on our remote server!  The problem is that Render does not support easy storage, there is no "hard drive" to save a database file on for instance. 
 
 To run a mongoDB process with remote access there are several options, but we'll choose the cloud mongo option offered by mongodb.com.  
 
@@ -349,17 +552,13 @@ To run a mongoDB process with remote access there are several options, but we'll
 1. Copy the connection string into a safe place and replace `<password>` with the password you saved earlier.
 
 
-## Connect Heroku to Mongo 
+## Connect Render to Mongo 
 
 1. Now you need to connect to a mongo database. Go to [dashboard.heroku.com](https://dashboard.heroku.com).
 1. Go to *Settings* -> *Reveal Config Vars*
-    This is where you can add environment variables — a great place for things like api keys and connection strings.
+    This is where you can add environment variables — a great place for things like API keys and connection strings.
 1. Add a key `MONGODB_URI` and paste the connection string you saved above into it. Remember to replace `<password>` with the actual password. 
 
-## Test it out!  
+## Congrats!
 
-To test it out, click *Open App* at the top right. That is the url that your heroku server is hosted at.
-
-![](img/test.jpg){: .small .fancy}
-
-You can also view server logs and restart the server from there, where can be very useful in debugging.
+![](img/kahoot-podium.gif)

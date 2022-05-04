@@ -19,6 +19,7 @@ const RoomSchema = new Schema({
   creator: String,
   questions: [{ prompt: String, answer: String }],
   submissions: [SubmissionSchema],
+  roomKey: String,
 });
 
 function generateScoreboard() {

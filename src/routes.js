@@ -5,7 +5,7 @@ const router = Router();
 
 // default index route
 router.get('/', (req, res) => {
-  return res.json({ message: 'Welcome to the kahoot api!' });
+  return res.json({ message: 'Welcome to the kahoot API!' });
 });
 
 router.route('/rooms')
@@ -22,7 +22,7 @@ router.route('/rooms')
 
     try {
       const result = await Rooms.createRoom(roomInitInfo);
-      return res.json(`Created room with id: ${result.id}`);
+      return res.json(result);
     } catch (err) {
       return res.status(500).json({ err });
     }
@@ -30,13 +30,13 @@ router.route('/rooms')
 
 router.route('/rooms/:id')
   .get(async (req, res) => {
-    const roomID = req.params.id;
+    const roomId = req.params.id;
     const { roomKey } = req.query;
     if (roomKey) {
       // key included and right, return everything
       // key included and wrong, return error
       try {
-        const room = await Rooms.getAlRoomInfo(roomID, roomKey);
+        const room = await Rooms.getAllRoomInfo(roomId, roomKey);
         return res.json(room);
       } catch (err) {
         console.log(err);
@@ -44,7 +44,7 @@ router.route('/rooms/:id')
       }
     } else {
       try {
-        const roomInfo = await Rooms.getLimitedRoomInfo(roomID);
+        const roomInfo = await Rooms.getLimitedRoomInfo(roomId);
         return res.json(roomInfo);
       } catch (err) {
         console.log(err);
@@ -57,28 +57,27 @@ router.route('/rooms/:id')
     const { player, responses } = req.body;
 
     try {
-      await Rooms.submit(roomId, player, responses);
-      return res.json({ message: 'Submitted successfully' });
+      const numCorrect = await Rooms.submit(roomId, player, responses);
+      return res.json({ correct: numCorrect });
     } catch (err) {
       console.log(err);
       return res.status(500).json(`${err}`);
     }
   })
   .delete(async (req, res) => {
-    const roomID = req.params.id;
+    const roomId = req.params.id;
     try {
-      await Rooms.deleteRoom(roomID);
-      return res.json({ message: `Room ${roomID} deleted successfully` });
+      await Rooms.deleteRoom(roomId);
+      return res.json({ message: `Room ${roomId} deleted successfully` });
     } catch (err) {
       return res.status(500).json({ err });
     }
   });
 
 router.get('/rooms/:id/scoreboard', async (req, res) => {
-  const roomID = req.params.id;
+  const roomId = req.params.id;
   try {
-    const scoreboard = await Rooms.getScoreboard(roomID);
-    console.log(scoreboard);
+    const scoreboard = await Rooms.getScoreboard(roomId);
     return res.json(scoreboard);
   } catch (err) {
     return res.status(404).json(`${err}`);

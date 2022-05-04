@@ -5,22 +5,37 @@ export const createRoom = (roomInitInfo) => {
   newRoom.creator = roomInitInfo.creator;
   newRoom.questions = roomInitInfo.questions;
   newRoom.submissions = [];
-
-  console.log(newRoom);
+  // if (roomInitInfo.roomKey) {
+  //   newRoom.roomKey = roomInitInfo.roomKey;
+  // }
+  newRoom.roomKey = roomInitInfo.roomKey;
 
   return newRoom.save();
 };
 
-export const deleteRoom = (roomID) => {
-  return Room.findByIdAndDelete(roomID);
+export const deleteRoom = (roomId) => {
+  return Room.findByIdAndDelete(roomId);
 };
 
-export const getLimitedRoomInfo = async (roomID) => {
-  return Room.findById(roomID, { 'questions.answer': 0, scoreboard: 0, submissions: 0 });
+// for players checking the status of the game
+export const getLimitedRoomInfo = async (roomId) => {
+  return Room.findById(roomId, {
+    'questions.answer': 0, scoreboard: 0, submissions: 0, roomKey: 0,
+  });
 };
 
-export const getScoreboard = async (roomID) => {
-  const room = await Room.findById(roomID);
+// for room creators checking the status of the game or room properties
+export const getAllRoomInfo = async (roomId, roomKey) => {
+  const room = await Room.findById(roomId);
+  if (roomKey === room.roomKey) {
+    return room;
+  } else {
+    throw new Error(`Room key ${roomKey} does not match key for this room.`);
+  }
+};
+
+export const getScoreboard = async (roomId) => {
+  const room = await Room.findById(roomId);
   return room.scoreboard;
 };
 
@@ -37,20 +52,18 @@ export const submit = async (roomId, player, responses) => {
 
   const rightAnswers = room.questions;
   let numCorrect = 0;
+
+  if (responses.length !== rightAnswers.length) {
+    throw new Error(`Number of responses (${responses.length}) does not match number of questions (${rightAnswers.length})`);
+  }
   responses.forEach((response, index) => {
-    console.log(`index ${index}`);
     if (response === rightAnswers[index].answer) {
       numCorrect += 1;
     }
   });
 
-  console.log(numCorrect);
-
   room.submissions.push(newSubmission);
+  await room.save();
 
-  return room.save();
+  return numCorrect;
 };
-
-// export const getAllRooms = () => {
-//   return Room.find({});
-// };
