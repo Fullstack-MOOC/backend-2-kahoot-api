@@ -1,5 +1,5 @@
 # kahoot-api
-New assignment for the MOOC :) A slightly more advanced version of the api from the express/mongo intro
+New assignment for the MOOC :) A slightly more advanced version of the API from the express/mongo intro
 
 Uses CS52 Express starterpack:
 
