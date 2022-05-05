@@ -81,11 +81,6 @@ router.patch('/rooms/:id', async (req, res) => {
 
 // submit a response
 router.post('/rooms/:id/submissions', async (req, res) => {
-//   {
-//     "player": "Player 1",
-// 		"questionIndex": 1,
-//     "response": "Tim Tregubov"
-// }
   const roomId = req.params.id;
   const { player, response } = req.body;
 
