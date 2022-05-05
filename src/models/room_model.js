@@ -6,9 +6,9 @@ const RoomSchema = new Schema({
   questions: [{ prompt: String, answer: String }],
   players: [String],
   roomKey: String,
-  open: Boolean,
+  status: String,
   currentQuestion: Number,
-  newSubmissions: Number,
+  numSubmissions: Number,
 });
 
 // class

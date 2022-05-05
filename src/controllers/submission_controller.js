@@ -4,6 +4,14 @@ import Submission from '../models/submission_model';
 const submit = async (roomId, player, response) => {
   const room = await Room.findById(roomId);
 
+  if (room.status !== 'in progress') {
+    throw new Error('This game is not in progress. Can\'t submit now.');
+  }
+
+  if (room.players.indexOf(player) === -1) {
+    throw new Error(`Player (${player}) not in room`);
+  }
+
   const exisitingSubmission = await Submission.findOne({ roomId, player, questionNumber: room.currentQuestion });
   if (exisitingSubmission) {
     throw new Error('This player has already submitted a repsonse to this question');
@@ -21,16 +29,19 @@ const submit = async (roomId, player, response) => {
 
   // see if all players have submitted
   const numPlayers = room.players.length;
+  console.log(numPlayers);
 
   room.numSubmissions += 1;
+  console.log(room.numSubmissions);
 
   if (room.numSubmissions === numPlayers) {
     room.currentQuestion += 1;
+    room.numSubmissions = 0;
   }
 
   // close room if all questions have been answered
   if (room.currentQuestion === room.questions.length) {
-    room.open = false;
+    room.status = 'closed';
   }
 
   await room.save();

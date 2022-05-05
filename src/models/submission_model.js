@@ -26,4 +26,6 @@ export const SubmissionSchema = new Schema({
 });
 
 // class
-export const SubmissionModel = mongoose.model('Submission', SubmissionSchema);
+const SubmissionModel = mongoose.model('Submission', SubmissionSchema);
+
+export default SubmissionModel;

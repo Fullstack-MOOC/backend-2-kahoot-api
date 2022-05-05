@@ -6,7 +6,9 @@ export const createRoom = (roomInitInfo) => {
   newRoom.creator = roomInitInfo.creator;
   newRoom.questions = roomInitInfo.questions;
   newRoom.submissions = [];
-  newRoom.open = false;
+  newRoom.status = 'closed';
+  newRoom.currentQuestion = 0;
+  newRoom.numSubmissions = 0;
   newRoom.roomKey = roomInitInfo.roomKey;
 
   return newRoom.save();
@@ -20,7 +22,13 @@ export const joinRoom = async (roomId, playerInfo) => {
   const existingPlayers = room.players;
 
   if (existingPlayers.find((player) => { return player === newPlayerName; })) {
-    throw new Error(`Player with your intended name (${newPlayerName})) already exists`);
+    throw new Error(`Player with your intended name (${newPlayerName}) already exists`);
+  }
+
+  if (room.status === 'closed') {
+    throw new Error('This room is closed');
+  } else if (room.status === 'in progress') {
+    throw new Error('This game is in progress. Cannot join now.');
   }
 
   // username is free; add player to room
@@ -36,11 +44,13 @@ export const changeStatus = async (roomId, roomKey, newStatus) => {
   }
 
   if (newStatus === 'open') {
-    room.open = true;
+    room.status = 'open';
   } else if (newStatus === 'closed') {
-    room.open = false;
+    room.status = false;
+  } else if (newStatus === 'in progress') {
+    room.status = 'in progress';
   } else {
-    throw new Error('Invalid status. Must be "open" or "closed"');
+    throw new Error('Invalid status. Must be "open", "in progress" or "closed"');
   }
 
   return room.save();
@@ -50,26 +60,10 @@ export const deleteRoom = (roomId) => {
   return Room.findByIdAndDelete(roomId);
 };
 
-// for players checking the status of the game
-export const getLimitedRoomInfo = async (roomId) => {
-  return Room.findById(roomId, {
-    'questions.answer': 0, scoreboard: 0, submissions: 0, roomKey: 0,
-  });
-};
-
-// for room creators checking the status of the game or room properties
-export const getAllRoomInfo = async (roomId, roomKey) => {
-  const room = await Room.findById(roomId);
-  if (roomKey === room.roomKey) {
-    return room;
-  } else {
-    throw new Error(`Room key ${roomKey} does not match key for this room.`);
-  }
-};
-
-export const getScoreboard = async (roomId, requestingPlayer) => {
+const getScoreboard = async (roomId, requestingPlayer) => {
   const room = await Room.findById(roomId);
   const roomSubmissions = await Submission.find({ roomId });
+  console.log(roomSubmissions);
 
   const scoreboard = {};
   room.players.forEach((player) => {
@@ -78,14 +72,40 @@ export const getScoreboard = async (roomId, requestingPlayer) => {
 
   roomSubmissions.forEach((submission) => {
     if (submission.questionNumber < room.currentQuestion && submission.correct) {
+      console.log('adding to scoreboard');
       scoreboard[submission.player] += 1;
     }
   });
 
   const sortedScoreboard = Object.entries(scoreboard).sort((a, b) => { return b[1] - a[1]; });
 
-  const topThree = sortedScoreboard.slice(2);
-  const requestingPlayerScoreboardPosition = sortedScoreboard.findIndex((entry) => { return entry[0] === requestingPlayer; });
+  let topThree;
+  if (sortedScoreboard.length > 2) {
+    topThree = sortedScoreboard.slice(2);
+  } else {
+    topThree = sortedScoreboard;
+  }
 
+  const requestingPlayerScoreboardPosition = sortedScoreboard.findIndex((entry) => { return entry[0] === requestingPlayer; });
   return { topThree, requestingPlayerScoreboardPosition };
+};
+
+export const getState = async (roomId, player) => {
+  const room = await Room.findById(roomId);
+  const { topThree, requestingPlayerScoreboardPosition } = await getScoreboard(roomId, player);
+
+  const gameOver = room.currentQuestion === room.questions.length;
+
+  const state = {
+    roomId,
+    status: room.status,
+    numSubmissions: room.numSubmissions,
+    yourName: player,
+    yourRank: requestingPlayerScoreboardPosition === -1 ? null : requestingPlayerScoreboardPosition + 1,
+    top3: topThree,
+    currentQuestionNumber: gameOver ? 'game over' : room.currentQuestion + 1,
+    currentQuestion: gameOver ? 'game over' : room.questions[room.currentQuestion].prompt,
+  };
+
+  return state;
 };
