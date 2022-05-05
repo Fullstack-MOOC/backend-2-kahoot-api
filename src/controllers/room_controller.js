@@ -1,16 +1,49 @@
 import Room from '../models/room_model';
+import Submission from '../models/submission_model';
 
 export const createRoom = (roomInitInfo) => {
   const newRoom = new Room();
   newRoom.creator = roomInitInfo.creator;
   newRoom.questions = roomInitInfo.questions;
   newRoom.submissions = [];
-  // if (roomInitInfo.roomKey) {
-  //   newRoom.roomKey = roomInitInfo.roomKey;
-  // }
+  newRoom.open = false;
   newRoom.roomKey = roomInitInfo.roomKey;
 
   return newRoom.save();
+};
+
+export const joinRoom = async (roomId, playerInfo) => {
+  const room = await Room.findById(roomId);
+
+  // make sure player's intended name does not already exist
+  const newPlayerName = playerInfo.name;
+  const existingPlayers = room.players;
+
+  if (existingPlayers.find((player) => { return player === newPlayerName; })) {
+    throw new Error(`Player with your intended name (${newPlayerName})) already exists`);
+  }
+
+  // username is free; add player to room
+  room.players.push(newPlayerName);
+
+  return room.save();
+};
+
+export const changeStatus = async (roomId, roomKey, newStatus) => {
+  const room = await Room.findById(roomId);
+  if (room.roomKey !== roomKey) {
+    throw new Error('Room key is incorrect');
+  }
+
+  if (newStatus === 'open') {
+    room.open = true;
+  } else if (newStatus === 'closed') {
+    room.open = false;
+  } else {
+    throw new Error('Invalid status. Must be "open" or "closed"');
+  }
+
+  return room.save();
 };
 
 export const deleteRoom = (roomId) => {
@@ -34,36 +67,25 @@ export const getAllRoomInfo = async (roomId, roomKey) => {
   }
 };
 
-export const getScoreboard = async (roomId) => {
+export const getScoreboard = async (roomId, requestingPlayer) => {
   const room = await Room.findById(roomId);
-  return room.scoreboard;
-};
+  const roomSubmissions = await Submission.find({ roomId });
 
-export const submit = async (roomId, player, responses) => {
-  // Add a new submission to the submissions db
-  // Could also use create() function that wraps new and save()
-  const newSubmission = {};
-  newSubmission.player = player;
-  newSubmission.responses = responses;
-  newSubmission.roomId = roomId;
+  const scoreboard = {};
+  room.players.forEach((player) => {
+    scoreboard[player] = 0;
+  });
 
-  // Add the submission ref to the room's submissions array
-  const room = await Room.findById(roomId);
-
-  const rightAnswers = room.questions;
-  let numCorrect = 0;
-
-  if (responses.length !== rightAnswers.length) {
-    throw new Error(`Number of responses (${responses.length}) does not match number of questions (${rightAnswers.length})`);
-  }
-  responses.forEach((response, index) => {
-    if (response === rightAnswers[index].answer) {
-      numCorrect += 1;
+  roomSubmissions.forEach((submission) => {
+    if (submission.questionNumber < room.currentQuestion && submission.correct) {
+      scoreboard[submission.player] += 1;
     }
   });
 
-  room.submissions.push(newSubmission);
-  await room.save();
+  const sortedScoreboard = Object.entries(scoreboard).sort((a, b) => { return b[1] - a[1]; });
 
-  return numCorrect;
+  const topThree = sortedScoreboard.slice(2);
+  const requestingPlayerScoreboardPosition = sortedScoreboard.findIndex((entry) => { return entry[0] === requestingPlayer; });
+
+  return { topThree, requestingPlayerScoreboardPosition };
 };

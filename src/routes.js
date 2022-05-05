@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as Rooms from './controllers/room_controller';
+import * as Submissions from './controllers/submission_controller';
 
 const router = Router();
 
@@ -54,25 +55,41 @@ router.route('/rooms/:id')
   })
   .post(async (req, res) => {
     const roomId = req.params.id;
-    const { player, responses } = req.body;
-
+    const playerInfo = req.body;
     try {
-      const numCorrect = await Rooms.submit(roomId, player, responses);
-      return res.json({ correct: numCorrect });
+      await Rooms.joinRoom(roomId, playerInfo);
+      return res.json({ message: 'You\'re in. Congrats!' });
     } catch (err) {
       console.log(err);
-      return res.status(500).json(`${err}`);
+      return res.status(500).json({ err });
     }
   })
-  .delete(async (req, res) => {
+  .patch(async (req, res) => {
     const roomId = req.params.id;
+    const { roomKey } = req.query;
+    const newStatus = req.body.status;
+
     try {
-      await Rooms.deleteRoom(roomId);
-      return res.json({ message: `Room ${roomId} deleted successfully` });
+      const result = await Rooms.changeStatus(roomId, roomKey, newStatus);
+      return res.json(result);
     } catch (err) {
+      console.log(err);
       return res.status(500).json({ err });
     }
   });
+
+router.post('/rooms/:id/submissions', async (req, res) => {
+  const roomId = req.params.id;
+  const { player, responses } = req.body;
+
+  try {
+    const numCorrect = await Submissions.submit(roomId, player, responses);
+    return res.json({ correct: numCorrect });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(`${err}`);
+  }
+});
 
 router.get('/rooms/:id/scoreboard', async (req, res) => {
   const roomId = req.params.id;
