@@ -41,9 +41,7 @@ describe('opening the room', () => {
 
 describe('players joining', () => {
   it('Alice joins', () => {
-    cy.request(
-      'POST',
-      `/rooms/${roomId}`,
+    cy.request('POST', `/rooms/${roomId}`,
       {
         name: 'Alice',
       },
@@ -52,9 +50,7 @@ describe('players joining', () => {
     });
   });
   it('Bob joins', () => {
-    cy.request(
-      'POST',
-      `/rooms/${roomId}`,
+    cy.request('POST', `/rooms/${roomId}`,
       {
         name: 'Bob',
       },
@@ -87,10 +83,9 @@ describe('Players submit answers to first question', () => {
       'POST',
       `/rooms/${roomId}/submissions`,
       {
-        name: 'Alice',
-        answer: 'Tim Tregubov',
-      },
-    ).then((response) => {
+        player: 'Alice',
+        response: 'Tim Tregubov',
+      }).then((response) => {
       expect(response.status).to.eq(200);
     });
   });
@@ -100,10 +95,9 @@ describe('Players submit answers to first question', () => {
       'POST',
       `/rooms/${roomId}/submissions`,
       {
-        name: 'Bob',
-        answer: 'Mr. Dr. Professor',
-      },
-    ).then((response) => {
+        player: 'Bob',
+        response: 'Mr. Dr. Professor',
+      }).then((response) => {
       expect(response.status).to.eq(200);
     });
   });
@@ -132,10 +126,9 @@ describe('Players submit answers to second question', () => {
       'POST',
       `/rooms/${roomId}/submissions`,
       {
-        name: 'Alice',
-        answer: 'JavaScript',
-      },
-    ).then((response) => {
+        player: 'Alice',
+        response: 'JavaScript',
+      }).then((response) => {
       expect(response.status).to.eq(200);
     });
   });
@@ -145,10 +138,9 @@ describe('Players submit answers to second question', () => {
       'POST',
       `/rooms/${roomId}/submissions`,
       {
-        name: 'Bob',
-        answer: 'JavaScript',
-      },
-    ).then((response) => {
+        player: 'Bob',
+        response: 'JavaScript',
+      }).then((response) => {
       expect(response.status).to.eq(200);
     });
   });
