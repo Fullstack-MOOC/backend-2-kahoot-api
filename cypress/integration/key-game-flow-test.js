@@ -34,7 +34,7 @@ describe('opening the room', () => {
 
 describe('players joining', () => {
   it('Alice joins', () => {
-    cy.request('POST', '/rooms/join',
+    cy.request('POST', `/rooms/${roomId}`,
       {
         name: 'Alice',
       }).then((response) => {
@@ -42,7 +42,7 @@ describe('players joining', () => {
     });
   });
   it('Bob joins', () => {
-    cy.request('POST', '/rooms/join',
+    cy.request('POST', `/rooms/${roomId}`,
       {
         name: 'Bob',
       }).then((response) => {
@@ -68,8 +68,8 @@ describe('Players submit answers to first question', () => {
   it('Alice submits (correct)', () => {
     cy.request('POST', `/rooms/${roomId}/submissions`,
       {
-        name: 'Alice',
-        answer: 'Tim Tregubov',
+        player: 'Alice',
+        response: 'Tim Tregubov',
       }).then((response) => {
       expect(response.status).to.eq(200);
     });
@@ -78,8 +78,8 @@ describe('Players submit answers to first question', () => {
   it('Bob submits (incorrect)', () => {
     cy.request('POST', `/rooms/${roomId}/submissions`,
       {
-        name: 'Bob',
-        answer: 'Mr. Dr. Professor',
+        player: 'Bob',
+        response: 'Mr. Dr. Professor',
       }).then((response) => {
       expect(response.status).to.eq(200);
     });
@@ -107,8 +107,8 @@ describe('Players submit answers to second question', () => {
   it('Alice submits (correct)', () => {
     cy.request('POST', `/rooms/${roomId}/submissions`,
       {
-        name: 'Alice',
-        answer: 'JavaScript',
+        player: 'Alice',
+        response: 'JavaScript',
       }).then((response) => {
       expect(response.status).to.eq(200);
     });
@@ -117,8 +117,8 @@ describe('Players submit answers to second question', () => {
   it('Bob submits (correct)', () => {
     cy.request('POST', `/rooms/${roomId}/submissions`,
       {
-        name: 'Bob',
-        answer: 'JavaScript',
+        player: 'Bob',
+        response: 'JavaScript',
       }).then((response) => {
       expect(response.status).to.eq(200);
     });
