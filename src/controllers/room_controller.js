@@ -99,7 +99,6 @@ export const getState = async (roomId, player) => {
   const state = {
     roomId,
     status: room.status,
-    numSubmissions: room.numSubmissions,
     yourName: player,
     yourRank: requestingPlayerScoreboardPosition === -1 ? null : requestingPlayerScoreboardPosition + 1,
     top3: topThree,
