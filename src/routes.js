@@ -67,7 +67,7 @@ router.post('/rooms/:id', async (req, res) => {
 router.patch('/rooms/:id', async (req, res) => {
   const roomId = req.params.id;
   const { roomKey } = req.query;
-  const newStatus = req.body.status;
+  const { newStatus } = req.body;
 
   try {
     const result = await Rooms.changeStatus(roomId, roomKey, newStatus);

@@ -3,8 +3,8 @@
 let roomId;
 let roomKey;
 
-describe('you shold be able to create a game', () => {
-  it('creates a new game', () => {
+describe('creating a game', () => {
+  it('admin creates room', () => {
     cy.request(
       'POST',
       '/rooms',
@@ -24,60 +24,148 @@ describe('you shold be able to create a game', () => {
   });
 });
 
-// test to make sure room was created correctly
-describe('you should be able to get all info about a room', () => {
-  it('should return the full room object when you hit the room endpoint with the correct key', () => {
-    cy.request('GET', `/rooms/${roomId}?roomKey=${roomKey}`).then((response) => {
-      // make sure request was successful
+describe('opening the room', () => {
+  it('admin opens room', () => {
+    cy.request(
+      'PATCH',
+      `/rooms/${roomId}?roomKey=${roomKey}`,
+      {
+        roomKey,
+        status: 'open',
+      },
+    ).then((response) => {
       expect(response.status).to.eq(200);
-      // check properties of the room object to make sure it has everything
-      expect(response.body.questions);
     });
   });
 });
 
-describe('a player should be able to get just the questions when the room has a key', () => {
-  it('should return success code and questions, but not answers', () => {
-    cy.request('GET', `/rooms/${roomId}`).then((response) => {
+describe('players joining', () => {
+  it('Alice joins', () => {
+    cy.request(
+      'POST',
+      `/rooms/${roomId}`,
+      {
+        name: 'Alice',
+      },
+    ).then((response) => {
       expect(response.status).to.eq(200);
-      expect(response.body).to.have.nested.property('questions[0].prompt').but.to.not.have.nested.property('questions[0].answer');
+    });
+  });
+  it('Bob joins', () => {
+    cy.request(
+      'POST',
+      `/rooms/${roomId}`,
+      {
+        name: 'Bob',
+      },
+    ).then((response) => {
+      expect(response.status).to.eq(200);
     });
   });
 });
 
-describe('a player should be able to submit answers to the questions', () => {
-  it('should return success when you submit correctly formatted answers, even if you get one wrong', () => {
+// admin starts game
+describe('starting game', () => {
+  it('admin starts game', () => {
     cy.request(
-      'POST',
-      `/rooms/${roomId}`,
+      'PATCH',
+      `/rooms/${roomId}?roomKey=${roomKey}`,
       {
-        player: 'Player 1',
-        responses: [
-          'Tim Tregubov',
-          'Python',
-        ],
+        roomKey,
+        status: 'in progress',
       },
     ).then((response) => {
       expect(response.status).to.eq(200);
-      console.log(response.body);
+    });
+  });
+});
+
+// Alice submits
+describe('Players submit answers to first question', () => {
+  it('Alice submits (correct)', () => {
+    cy.request(
+      'POST',
+      `/rooms/${roomId}/submissions`,
+      {
+        name: 'Alice',
+        answer: 'Tim Tregubov',
+      },
+    ).then((response) => {
+      expect(response.status).to.eq(200);
     });
   });
 
-  it('should return success when you submit correctly formatted answers, when you get all of them correct', () => {
+  it('Bob submits (incorrect)', () => {
     cy.request(
       'POST',
-      `/rooms/${roomId}`,
+      `/rooms/${roomId}/submissions`,
       {
-        player: 'Player 2',
-        responses: [
-          'Tim Tregubov',
-          'JavaScript',
-          'Party in the USA',
-        ],
+        name: 'Bob',
+        answer: 'Mr. Dr. Professor',
       },
     ).then((response) => {
       expect(response.status).to.eq(200);
-      expect(response.body);
+    });
+  });
+});
+
+// Players checks the score after the first question
+describe('Players check their scores after first Q', () => {
+  it('Alice checks the score', () => {
+    cy.request('GET', `/rooms/${roomId}?player=Alice`).then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body.yourRank).to.eq(1);
+    });
+  });
+
+  it('Bob checks the score', () => {
+    cy.request('GET', `/rooms/${roomId}?player=Bob`).then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body.yourRank).to.eq(2);
+    });
+  });
+});
+
+describe('Players submit answers to second question', () => {
+  it('Alice submits (correct)', () => {
+    cy.request(
+      'POST',
+      `/rooms/${roomId}/submissions`,
+      {
+        name: 'Alice',
+        answer: 'JavaScript',
+      },
+    ).then((response) => {
+      expect(response.status).to.eq(200);
+    });
+  });
+
+  it('Bob submits (correct)', () => {
+    cy.request(
+      'POST',
+      `/rooms/${roomId}/submissions`,
+      {
+        name: 'Bob',
+        answer: 'JavaScript',
+      },
+    ).then((response) => {
+      expect(response.status).to.eq(200);
+    });
+  });
+});
+
+describe('Players check their final scores', () => {
+  it('Alice checks the score', () => {
+    cy.request('GET', `/rooms/${roomId}?player=Alice`).then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body.yourRank).to.eq(1);
+    });
+  });
+
+  it('Bob checks the score', () => {
+    cy.request('GET', `/rooms/${roomId}?player=Bob`).then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body.yourRank).to.eq(2);
     });
   });
 });
