@@ -16,10 +16,10 @@ export const createRoom = (roomInitInfo) => {
 
 // todo: needs to be global admin protected
 // or for testing only - remove later
-export const getAllRooms = async () => {  
+export const getAllRooms = async () => {
   const rooms = await Room.find({});
   return rooms;
-}
+};
 
 export const joinRoom = async (roomId, playerInfo) => {
   const room = await Room.findById(roomId);

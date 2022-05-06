@@ -21,8 +21,6 @@ app.use('', router);
 
 // START THE SERVER
 // =============================================================================
-const port = process.env.PORT || 9090;
-
 (async () => {
   try {
     // connect DB

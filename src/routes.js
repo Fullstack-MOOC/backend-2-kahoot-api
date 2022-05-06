@@ -6,7 +6,6 @@ const router = Router();
 // here we set up handling of endpoints
 // each route will talk to a controller and return a response
 
-
 // default index route
 router.get('/', (req, res) => {
   return res.json({ message: 'Welcome to the kahoot API!' });
