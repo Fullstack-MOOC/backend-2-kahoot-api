@@ -29,10 +29,8 @@ const submit = async (roomId, player, response) => {
 
   // see if all players have submitted
   const numPlayers = room.players.length;
-  console.log(numPlayers);
 
   room.numSubmissions += 1;
-  console.log(room.numSubmissions);
 
   if (room.numSubmissions === numPlayers) {
     room.currentQuestion += 1;

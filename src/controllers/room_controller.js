@@ -14,6 +14,13 @@ export const createRoom = (roomInitInfo) => {
   return newRoom.save();
 };
 
+// todo: needs to be global admin protected
+// or for testing only - remove later
+export const getAllRooms = async () => {  
+  const rooms = await Room.find({});
+  return rooms;
+}
+
 export const joinRoom = async (roomId, playerInfo) => {
   const room = await Room.findById(roomId);
 
@@ -57,6 +64,7 @@ export const changeStatus = async (roomId, roomKey, newStatus) => {
 };
 
 export const deleteRoom = (roomId) => {
+  // what might a reset room look like?
   return Room.findByIdAndDelete(roomId);
 };
 
