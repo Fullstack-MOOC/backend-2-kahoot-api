@@ -32,7 +32,7 @@ describe('opening the room', () => {
       `/rooms/${roomId}?roomKey=${roomKey}`,
       {
         roomKey,
-        status: 'open',
+        status: 'OPEN',
       },
     ).then((response) => {
       expect(response.status).to.eq(200);
@@ -73,7 +73,7 @@ describe('starting game', () => {
       `/rooms/${roomId}?roomKey=${roomKey}`,
       {
         roomKey,
-        status: 'in_progress',
+        status: 'IN_PROGRESS',
       },
     ).then((response) => {
       expect(response.status).to.eq(200);
@@ -97,7 +97,7 @@ describe('Late players attempts to join', () => {
 });
 
 // Alice submits
-describe('Players submit answers to first question', () => {
+describe('Players submit answers to first question (index 0)', () => {
   it('Bob submits (incorrect)', () => {
     cy.request(
       'POST',
@@ -144,25 +144,25 @@ describe('Players submit answers to first question', () => {
 });
 
 // Players checks the score after the first question
-describe('Players check their scores after first Q', () => {
-  it('Alice checks the score, rank 1, and we are now on question 2', () => {
+describe('Players check their scores after first round', () => {
+  it('Alice checks the score, rank 1, and we are now on question 2 (index 1)', () => {
     cy.request('GET', `/rooms/${roomId}?player=Alice`).then((response) => {
       expect(response.status).to.eq(200);
       expect(response.body.yourRank).to.eq(1);
-      expect(response.body.currentQuestionNumber).to.eq(2);
+      expect(response.body.currentQuestionNumber).to.eq(1);
     });
   });
 
-  it('Bob checks the score, rank 2, and we are now on question 2', () => {
+  it('Bob checks the score, rank 2, and we are now on question 2 (index 1)', () => {
     cy.request('GET', `/rooms/${roomId}?player=Bob`).then((response) => {
       expect(response.status).to.eq(200);
       expect(response.body.yourRank).to.eq(2);
-      expect(response.body.currentQuestionNumber).to.eq(2);
+      expect(response.body.currentQuestionNumber).to.eq(1);
     });
   });
 });
 
-describe('Players submit answers to second question', () => {
+describe('Players submit answers to 2nd question, (index 1)', () => {
   it('Alice submits (correct)', () => {
     cy.request(
       'POST',
@@ -194,7 +194,7 @@ describe('Players submit answers to second question', () => {
   });
 });
 
-describe('Players submit answers to third question', () => {
+describe('Players submit answers to 3rd question (index 2)', () => {
   it('Alice submits (correct)', () => {
     cy.request(
       'POST',
@@ -206,6 +206,7 @@ describe('Players submit answers to third question', () => {
     ).then((response) => {
       expect(response.status).to.eq(200);
       expect(response.body.correct).to.eq(true);
+      expect(response.body.questionNumber).to.eq(2);
     });
   });
 
@@ -220,15 +221,18 @@ describe('Players submit answers to third question', () => {
     ).then((response) => {
       expect(response.status).to.eq(200);
       expect(response.body.correct).to.eq(false);
+      expect(response.body.questionNumber).to.eq(2);
     });
   });
 });
 
-describe('Players check their final scores', () => {
+describe('Players check their final scores (game over, question -1)', () => {
   it('Alice checks the score, rank 1', () => {
     cy.request('GET', `/rooms/${roomId}?player=Alice`).then((response) => {
       expect(response.status).to.eq(200);
       expect(response.body.yourRank).to.eq(1);
+      expect(response.body.status).to.eq('GAME_OVER');
+      expect(response.body.currentQuestionNumber).to.eq(-1);
     });
   });
 
@@ -236,6 +240,8 @@ describe('Players check their final scores', () => {
     cy.request('GET', `/rooms/${roomId}?player=Bob`).then((response) => {
       expect(response.status).to.eq(200);
       expect(response.body.yourRank).to.eq(2);
+      expect(response.body.status).to.eq('GAME_OVER');
+      expect(response.body.currentQuestionNumber).to.eq(-1);
     });
   });
 });

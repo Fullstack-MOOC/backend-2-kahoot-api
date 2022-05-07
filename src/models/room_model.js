@@ -6,7 +6,7 @@ const RoomSchema = new Schema({
   players: [String],
   roomKey: String,
   status: String,
-  currentQuestion: Number,
+  currentQuestionNumber: Number,
 }, {
   toObject: { virtuals: true },
   toJSON: { virtuals: true },
