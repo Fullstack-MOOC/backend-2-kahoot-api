@@ -1,7 +1,7 @@
 import Submission from '../models/submission_model';
 
 // new answer submission
-export const submit = async (roomId, player, questionNumber, response, correct) => {
+export async function submit(roomId, player, questionNumber, response, correct) {
   const exisitingSubmission = await Submission.findOne({ roomId, player, questionNumber });
   if (exisitingSubmission) {
     throw new Error('This player has already submitted a repsonse to this question');
@@ -20,10 +20,10 @@ export const submit = async (roomId, player, questionNumber, response, correct) 
   const numSubmissions = await Submission.countDocuments({ roomId, questionNumber });
 
   return { numSubmissions, newSubmission };
-};
+}
 
 // computes scores for all players in a room
-export const getScores = async (roomId, currentQuestionNumber, players) => {
+export async function getScores(roomId, currentQuestionNumber, players) {
   const submissions = await Submission.find({ roomId, questionNumber: currentQuestionNumber });
 
   const scores = {};
@@ -41,4 +41,4 @@ export const getScores = async (roomId, currentQuestionNumber, players) => {
   const sorted = Object.entries(scores).sort((a, b) => { return b[1] - a[1]; });
 
   return sorted;
-};
+}

@@ -1,7 +1,7 @@
 import Room, { RoomStates } from '../models/room_model';
 import { submit, getScores } from './submission_controller';
 
-export const createRoom = (roomInitInfo) => {
+export async function createRoom(roomInitInfo) {
   const newRoom = new Room();
   newRoom.creator = roomInitInfo.creator;
   newRoom.questions = roomInitInfo.questions;
@@ -11,9 +11,9 @@ export const createRoom = (roomInitInfo) => {
   newRoom.roomKey = roomInitInfo.roomKey;
 
   return newRoom.save();
-};
+}
 
-export const joinRoom = async (roomId, playerInfo) => {
+export async function joinRoom(roomId, playerInfo) {
   const room = await Room.findById(roomId);
 
   // make sure player's intended name does not already exist
@@ -32,11 +32,10 @@ export const joinRoom = async (roomId, playerInfo) => {
 
   // username is free; add player to room
   room.players.push(newPlayerName);
-
   return room.save();
-};
+}
 
-export const changeStatus = async (roomId, roomKey, status) => {
+export async function changeStatus(roomId, roomKey, status) {
   const room = await Room.findById(roomId);
   if (room.roomKey !== roomKey) {
     throw new Error('Room key is incorrect');
@@ -49,10 +48,10 @@ export const changeStatus = async (roomId, roomKey, status) => {
   }
 
   return room.save();
-};
+}
 
 // returns the main game state with current question, rank, game status, and scoreboard
-export const getState = async (roomId, player) => {
+export async function getState(roomId, player) {
   const room = await Room.findById(roomId);
   const scores = await getScores(roomId, room.currentQuestionNumber, room.players);
   const topThree = scores.slice(0, 3);
@@ -74,10 +73,10 @@ export const getState = async (roomId, player) => {
   };
 
   return state;
-};
+}
 
 // submit an answer to a room's current question
-export const submitAnswer = async (roomId, player, response) => {
+export async function submitAnswer(roomId, player, response) {
   const room = await Room.findById(roomId);
 
   if (room.status !== 'IN_PROGRESS') {
@@ -105,4 +104,4 @@ export const submitAnswer = async (roomId, player, response) => {
   await room.save();
 
   return newSubmission;
-};
+}

@@ -15,8 +15,8 @@ router.get('/rooms', async (_, res) => {
   try {
     const rooms = await Rooms.getAllRooms();
     return res.json(rooms);
-  } catch (err) {
-    return res.status(422).json(`${err}`);
+  } catch (error) {
+    return res.status(422).json({ error: error.message });
   }
 });
 
@@ -27,8 +27,8 @@ router.post('/rooms', async (req, res) => {
   try {
     const result = await Rooms.createRoom(roomInitInfo);
     return res.json(result);
-  } catch (err) {
-    return res.status(422).json({ err });
+  } catch (error) {
+    return res.status(422).json({ error: error.message });
   }
 });
 
@@ -40,9 +40,9 @@ router.get('/rooms/:id', async (req, res) => {
   try {
     const state = await Rooms.getState(roomId, player);
     return res.json(state);
-  } catch (err) {
-    console.log(err);
-    return res.status(422).json(err);
+  } catch (error) {
+    console.error(error);
+    return res.status(422).json({ error: error.message });
   }
 });
 
@@ -50,13 +50,12 @@ router.get('/rooms/:id', async (req, res) => {
 router.post('/rooms/:id', async (req, res) => {
   const roomId = req.params.id;
   const playerInfo = req.body;
-  // are we envisioning there to ever be more than one field here?
   try {
     await Rooms.joinRoom(roomId, playerInfo);
-    return res.json({ message: 'You\'re in. Congrats!' });
-  } catch (err) {
-    console.log(err);
-    return res.status(422).json(err.toString());
+    return res.json({ roomId, yourName: playerInfo.name });
+  } catch (error) {
+    console.error(error);
+    return res.status(422).json({ error: error.message });
   }
 });
 
@@ -69,9 +68,9 @@ router.patch('/rooms/:id', async (req, res) => {
   try {
     const result = await Rooms.changeStatus(roomId, roomKey, status);
     return res.json(result);
-  } catch (err) {
-    console.log(err);
-    return res.status(422).json({ err });
+  } catch (error) {
+    console.error(error);
+    return res.status(422).json({ error: error.message });
   }
 });
 
@@ -83,9 +82,9 @@ router.post('/rooms/:id/submissions', async (req, res) => {
   try {
     const submissionData = await Rooms.submitAnswer(roomId, player, response);
     return res.json(submissionData);
-  } catch (err) {
-    console.log(err);
-    return res.status(422).json(`${err}`);
+  } catch (error) {
+    console.error(error);
+    return res.status(422).json({ error: error.message });
   }
 });
 
@@ -94,8 +93,8 @@ router.get('/rooms/:id/scoreboard', async (req, res) => {
   try {
     const scoreboard = await Rooms.getScoreboard(roomId);
     return res.json(scoreboard);
-  } catch (err) {
-    return res.status(422).json(`${err}`);
+  } catch (error) {
+    return res.status(422).json({ error: error.message });
   }
 });
 
