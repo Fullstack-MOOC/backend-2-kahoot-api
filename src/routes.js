@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import * as Rooms from './controllers/room_controller';
-import submit from './controllers/submission_controller';
 
 const router = Router();
 // here we set up handling of endpoints
@@ -82,7 +81,7 @@ router.post('/rooms/:id/submissions', async (req, res) => {
   const { player, response } = req.body;
 
   try {
-    const submissionData = await submit(roomId, player, response);
+    const submissionData = await Rooms.submitAnswer(roomId, player, response);
     return res.json(submissionData);
   } catch (err) {
     console.log(err);
