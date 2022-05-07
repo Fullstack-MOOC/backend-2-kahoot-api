@@ -57,21 +57,11 @@ export const changeStatus = async (roomId, roomKey, status) => {
     throw new Error('Room key is incorrect');
   }
 
-  console.log(status, room.status);
   if (status in gameStates) {
     room.status = status;
   } else {
     throw new Error(`Invalid status. Must be ${gameStates.closed}, ${gameStates.open}, ${gameStates.in_progress} or ${gameStates.game_over}`);
   }
-  // if (status === gameStates.open) {
-  //   room.status = 'open';
-  // } else if (status === gameStates.closed) {
-  //   room.status = false;
-  // } else if (status === gameStates.in_progress) {
-  //   room.status = 'in_progress';
-  // } else {
-  //   throw new Error(`Invalid status. Must be ${gameStates.open}, ${gameStates.closed} or ${gameStates.in_progress}`);
-  // }
 
   return room.save();
 };
