@@ -1,11 +1,11 @@
 import Room from '../models/room_model';
 import Submission from '../models/submission_model';
 
-export const gameStates = {
-  in_progress: 'in_progress',
-  closed: 'closed',
-  game_over: 'game_over',
-  open: 'open',
+export const RoomStates = {
+  IN_PROGRESS: 'IN_PROGRESS',
+  CLOSED: 'CLOSED',
+  GAME_OVER: 'GAME_OVER',
+  OPEN: 'OPEN',
 };
 
 export const createRoom = (roomInitInfo) => {
@@ -13,18 +13,11 @@ export const createRoom = (roomInitInfo) => {
   newRoom.creator = roomInitInfo.creator;
   newRoom.questions = roomInitInfo.questions;
   newRoom.submissions = [];
-  newRoom.status = 'closed';
-  newRoom.currentQuestion = 0;
+  newRoom.status = RoomStates.CLOSED;
+  newRoom.currentQuestionNumber = 0;
   newRoom.roomKey = roomInitInfo.roomKey;
 
   return newRoom.save();
-};
-
-// todo: needs to be global admin protected
-// or for testing only - remove later
-export const getAllRooms = async () => {
-  const rooms = await Room.find({});
-  return rooms;
 };
 
 export const joinRoom = async (roomId, playerInfo) => {
@@ -34,14 +27,13 @@ export const joinRoom = async (roomId, playerInfo) => {
   const newPlayerName = playerInfo.name;
   const existingPlayers = room.players;
 
-  if (existingPlayers.find((player) => { return player === newPlayerName; })) {
+  if (existingPlayers.includes(newPlayerName)) {
     throw new Error(`Player with your intended name (${newPlayerName}) already exists`);
   }
 
-  console.log(room.status);
-  if (room.status === gameStates.closed) {
+  if (room.status === RoomStates.CLOSED) {
     throw new Error('This room is closed');
-  } else if (room.status === gameStates.in_progress) {
+  } else if (room.status === RoomStates.IN_PROGRESS) {
     throw new Error('This game is in progress. Cannot join now.');
   }
 
@@ -57,32 +49,32 @@ export const changeStatus = async (roomId, roomKey, status) => {
     throw new Error('Room key is incorrect');
   }
 
-  if (status in gameStates) {
+  if (status in RoomStates) {
     room.status = status;
   } else {
-    throw new Error(`Invalid status. Must be ${gameStates.closed}, ${gameStates.open}, ${gameStates.in_progress} or ${gameStates.game_over}`);
+    throw new Error(`Invalid status. Must be ${RoomStates.CLOSED}, ${RoomStates.OPEN}, ${RoomStates.IN_PROGRESS} or ${RoomStates.GAME_OVER}`);
   }
 
   return room.save();
 };
 
+// private method not in assignment spec
 export const deleteRoom = (roomId) => {
-  // what might a reset room look like?
   return Room.findByIdAndDelete(roomId);
 };
 
-const getScoreboard = async (roomId, requestingPlayer) => {
-  const room = await Room.findById(roomId);
-  const roomSubmissions = await Submission.find({ roomId });
+// computes top3 scoreboard and player rank, we don't return the full list
+const getScoreboard = async (room, requestingPlayer) => {
+  const roomSubmissions = await Submission.find({ roomId: room.id });
 
   const scoreboard = {};
   room.players.forEach((player) => {
     scoreboard[player] = 0;
   });
 
-  // don't count unfinished rounds
   roomSubmissions.forEach((submission) => {
-    if ((room.currentQuestion === 'game_over' || submission.questionNumber < room.currentQuestion) && submission.correct) {
+    // don't count unfinished rounds
+    if (submission.questionNumber < room.currentQuestionNumber && submission.correct) {
       scoreboard[submission.player] += 1;
     }
   });
@@ -91,25 +83,49 @@ const getScoreboard = async (roomId, requestingPlayer) => {
 
   const topThree = sortedScoreboard.slice(0, 3);
 
+  // get rank of requestingPlayer
   const requestingPlayerScoreboardPosition = sortedScoreboard.findIndex((entry) => { return entry[0] === requestingPlayer; });
   return { topThree, requestingPlayerScoreboardPosition };
 };
 
+// returns the main game state with current question, rank, game status, and scoreboard
 export const getState = async (roomId, player) => {
   const room = await Room.findById(roomId);
-  const { topThree, requestingPlayerScoreboardPosition } = await getScoreboard(roomId, player);
+  const { topThree, requestingPlayerScoreboardPosition } = await getScoreboard(room, player);
 
-  const gameOver = room.currentQuestion === room.questions.length;
+  const gameOver = room.currentQuestionNumber === room.questions.length;
 
   const state = {
     roomId,
     status: room.status,
+    players: room.players,
     yourName: player,
     yourRank: requestingPlayerScoreboardPosition === -1 ? null : requestingPlayerScoreboardPosition + 1,
     top3: topThree,
-    currentQuestionNumber: gameOver ? 'game_over' : room.currentQuestion + 1,
-    currentQuestion: gameOver ? 'game_over' : room.questions[room.currentQuestion].prompt,
+    currentQuestionNumber: gameOver ? -1 : room.currentQuestionNumber, // why was this +1
+    currentQuestion: gameOver ? -1 : room.questions[room.currentQuestionNumber].prompt,
   };
 
   return state;
+};
+
+export const updateRoom = async (roomId, numSubmissions) => {
+  const room = await Room.findById(roomId);
+
+  // if question has been submitted by all players, move to next question
+  if (numSubmissions === room.players.length) {
+    room.currentQuestionNumber += 1;
+  }
+
+  // close room if all questions have been answered
+  if (room.currentQuestionNumber === room.questions.length) {
+    room.status = RoomStates.GAME_OVER;
+  }
+
+  await room.save();
+};
+
+export const checkQuestion = async (roomId, question, submission) => {
+  const room = await Room.findById(roomId);
+  return room.questions[question].answer === submission;
 };
