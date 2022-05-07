@@ -21,7 +21,7 @@ app.use('', router);
 
 // START THE SERVER
 // =============================================================================
-(async () => {
+async function startServer() {
   try {
     // connect DB
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/kahootAPI';
@@ -35,4 +35,6 @@ app.use('', router);
   } catch (error) {
     console.error(error);
   }
-})();
+}
+
+startServer();

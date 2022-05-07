@@ -4,11 +4,11 @@ import Submission from '../models/submission_model';
 const submit = async (roomId, player, response) => {
   const room = await Room.findById(roomId);
 
-  if (room.status !== 'in progress') {
+  if (room.status !== 'in_progress') {
     throw new Error('This game is not in progress. Can\'t submit now.');
   }
 
-  if (room.players.indexOf(player) === -1) {
+  if (!room.players.includes(player)) {
     throw new Error(`Player (${player}) not in room`);
   }
 
@@ -29,12 +29,11 @@ const submit = async (roomId, player, response) => {
 
   // see if all players have submitted
   const numPlayers = room.players.length;
+  const numSubmissions = await Submission.countDocuments({ roomId, questionNumber: room.currentQuestion });
 
-  room.numSubmissions += 1;
-
-  if (room.numSubmissions === numPlayers) {
+  // if question has been submitted by all players, move to next question
+  if (numSubmissions === numPlayers) {
     room.currentQuestion += 1;
-    room.numSubmissions = 0;
   }
 
   // close room if all questions have been answered

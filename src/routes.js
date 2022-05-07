@@ -17,7 +17,7 @@ router.get('/rooms', async (_, res) => {
     const rooms = await Rooms.getAllRooms();
     return res.json(rooms);
   } catch (err) {
-    return res.status(500).json(`${err}`);
+    return res.status(422).json(`${err}`);
   }
 });
 
@@ -29,23 +29,21 @@ router.post('/rooms', async (req, res) => {
     const result = await Rooms.createRoom(roomInitInfo);
     return res.json(result);
   } catch (err) {
-    return res.status(500).json({ err });
+    return res.status(422).json({ err });
   }
 });
 
 // get gamestate for room
 router.get('/rooms/:id', async (req, res) => {
   const roomId = req.params.id;
-  // todo: should we handle secret here for admin state return?
   const { player } = req.query;
-  // const { roomKey } = req.query;
 
   try {
     const state = await Rooms.getState(roomId, player);
     return res.json(state);
   } catch (err) {
     console.log(err);
-    return res.status(500).json(err);
+    return res.status(422).json(err);
   }
 });
 
@@ -59,7 +57,7 @@ router.post('/rooms/:id', async (req, res) => {
     return res.json({ message: 'You\'re in. Congrats!' });
   } catch (err) {
     console.log(err);
-    return res.status(500).json(err.toString());
+    return res.status(422).json(err.toString());
   }
 });
 
@@ -67,14 +65,14 @@ router.post('/rooms/:id', async (req, res) => {
 router.patch('/rooms/:id', async (req, res) => {
   const roomId = req.params.id;
   const { roomKey } = req.query;
-  const { newStatus } = req.body;
+  const { status } = req.body;
 
   try {
-    const result = await Rooms.changeStatus(roomId, roomKey, newStatus);
+    const result = await Rooms.changeStatus(roomId, roomKey, status);
     return res.json(result);
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ err });
+    return res.status(422).json({ err });
   }
 });
 
@@ -88,7 +86,7 @@ router.post('/rooms/:id/submissions', async (req, res) => {
     return res.json(submissionData);
   } catch (err) {
     console.log(err);
-    return res.status(500).json(`${err}`);
+    return res.status(422).json(`${err}`);
   }
 });
 
@@ -98,7 +96,7 @@ router.get('/rooms/:id/scoreboard', async (req, res) => {
     const scoreboard = await Rooms.getScoreboard(roomId);
     return res.json(scoreboard);
   } catch (err) {
-    return res.status(404).json(`${err}`);
+    return res.status(422).json(`${err}`);
   }
 });
 
