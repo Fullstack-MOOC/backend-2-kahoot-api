@@ -1,5 +1,5 @@
 import Room, { RoomStates } from '../models/room_model';
-import Submission from '../models/submission_model';
+import { submit, getScores } from './submission_controller';
 
 export const createRoom = (roomInitInfo) => {
   const newRoom = new Room();
@@ -51,40 +51,14 @@ export const changeStatus = async (roomId, roomKey, status) => {
   return room.save();
 };
 
-// private method not in assignment spec
-export const deleteRoom = (roomId) => {
-  return Room.findByIdAndDelete(roomId);
-};
-
-// computes top3 scoreboard and player rank, we don't return the full list
-const getScoreboard = async (room, requestingPlayer) => {
-  const roomSubmissions = await Submission.find({ roomId: room.id });
-
-  const scoreboard = {};
-  room.players.forEach((player) => {
-    scoreboard[player] = 0;
-  });
-
-  roomSubmissions.forEach((submission) => {
-    // don't count unfinished rounds
-    if (submission.questionNumber < room.currentQuestionNumber && submission.correct) {
-      scoreboard[submission.player] += 1;
-    }
-  });
-
-  const sortedScoreboard = Object.entries(scoreboard).sort((a, b) => { return b[1] - a[1]; });
-
-  const topThree = sortedScoreboard.slice(0, 3);
-
-  // get rank of requestingPlayer
-  const requestingPlayerScoreboardPosition = sortedScoreboard.findIndex((entry) => { return entry[0] === requestingPlayer; });
-  return { topThree, requestingPlayerScoreboardPosition };
-};
-
 // returns the main game state with current question, rank, game status, and scoreboard
 export const getState = async (roomId, player) => {
   const room = await Room.findById(roomId);
-  const { topThree, requestingPlayerScoreboardPosition } = await getScoreboard(room, player);
+  const scores = await getScores(roomId, room.currentQuestionNumber, room.players);
+  const topThree = scores.slice(0, 3);
+
+  // get rank of requestingPlayer
+  const requestingPlayerScoreboardPosition = scores.findIndex((entry) => { return entry[0] === player; });
 
   const gameOver = room.currentQuestionNumber === room.questions.length;
 
@@ -102,8 +76,21 @@ export const getState = async (roomId, player) => {
   return state;
 };
 
-export const updateRoom = async (roomId, numSubmissions) => {
+// submit an answer to a room's current question
+export const submitAnswer = async (roomId, player, response) => {
   const room = await Room.findById(roomId);
+
+  if (room.status !== 'IN_PROGRESS') {
+    throw new Error('This game is not in progress. Can\'t submit now.');
+  }
+
+  if (!room.players.includes(player)) {
+    throw new Error(`Player (${player}) not in room`);
+  }
+
+  const isCorrect = room.questions[room.currentQuestionNumber].answer === response;
+
+  const { numSubmissions, newSubmission } = await submit(roomId, player, room.currentQuestionNumber, response, isCorrect);
 
   // if question has been submitted by all players, move to next question
   if (numSubmissions === room.players.length) {
@@ -116,9 +103,6 @@ export const updateRoom = async (roomId, numSubmissions) => {
   }
 
   await room.save();
-};
 
-export const checkQuestion = async (roomId, question, submission) => {
-  const room = await Room.findById(roomId);
-  return room.questions[question].answer === submission;
+  return newSubmission;
 };
