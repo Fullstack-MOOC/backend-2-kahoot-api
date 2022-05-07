@@ -1,5 +1,5 @@
 import Room, { RoomStates } from '../models/room_model';
-import { submit, getScores } from './submission_controller';
+import { submit, getScores, countSubmissions } from './submission_controller';
 
 export async function createRoom(roomInitInfo) {
   const newRoom = new Room();
@@ -89,7 +89,8 @@ export async function submitAnswer(roomId, player, response) {
 
   const isCorrect = room.questions[room.currentQuestionNumber].answer === response;
 
-  const { numSubmissions, newSubmission } = await submit(roomId, player, room.currentQuestionNumber, response, isCorrect);
+  const newSubmission = await submit(roomId, player, room.currentQuestionNumber, response, isCorrect);
+  const numSubmissions = await countSubmissions(roomId, room.currentQuestionNumber);
 
   // if question has been submitted by all players, move to next question
   if (numSubmissions === room.players.length) {

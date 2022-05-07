@@ -16,10 +16,14 @@ export async function submit(roomId, player, questionNumber, response, correct) 
   });
   await newSubmission.save();
 
+  return newSubmission;
+}
+
+export async function countSubmissions(roomId, questionNumber) {
   // see if all players have submitted and update the game state as necessary / has to be after submission is saved
   const numSubmissions = await Submission.countDocuments({ roomId, questionNumber });
 
-  return { numSubmissions, newSubmission };
+  return numSubmissions;
 }
 
 // computes scores for all players in a room
