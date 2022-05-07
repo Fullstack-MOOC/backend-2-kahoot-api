@@ -1,19 +1,20 @@
 # kahoot-api
-New assignment for the MOOC :) A slightly more advanced version of the API from the express/mongo intro
 
-Uses CS52 Express starterpack:
+REST API for Kahoots Clone
 
 * node with babel
 * expressjs
 * airbnb eslint rules
+* mongoose
+* cypress
 
-Procfile set up to run on [heroku](https://devcenter.heroku.com/articles/getting-started-with-nodejs#deploy-the-app)
+
+```
+npm install
+
+npm start
+
+npm run test
+```
 
 
-## Steps
-
-1. Make new repo
-2. Pull in starterpack
-3. npm install (why did we go away from yarn? was it yarn 2?)
-4. install mongoose (w/ npm) and put code in server.js (for now) 
-...
