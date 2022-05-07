@@ -1,12 +1,5 @@
-import Room from '../models/room_model';
+import Room, { RoomStates } from '../models/room_model';
 import Submission from '../models/submission_model';
-
-export const RoomStates = {
-  IN_PROGRESS: 'IN_PROGRESS',
-  CLOSED: 'CLOSED',
-  GAME_OVER: 'GAME_OVER',
-  OPEN: 'OPEN',
-};
 
 export const createRoom = (roomInitInfo) => {
   const newRoom = new Room();
