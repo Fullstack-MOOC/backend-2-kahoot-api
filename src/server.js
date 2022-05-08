@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
-import router from './routes';
+import routes from './routes';
 
 // initialize
 const app = express();
@@ -17,7 +17,7 @@ app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // To parse the incoming requests with JSON payloads
 
-app.use('', router);
+app.use('', routes);
 
 // START THE SERVER
 // =============================================================================

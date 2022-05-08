@@ -10,16 +10,6 @@ router.get('/', (req, res) => {
   return res.json({ message: 'Welcome to the kahoot API!' });
 });
 
-// get all rooms
-router.get('/rooms', async (_, res) => {
-  try {
-    const rooms = await Rooms.getAllRooms();
-    return res.json(rooms);
-  } catch (error) {
-    return res.status(422).json({ error: error.message });
-  }
-});
-
 // create a room - admin
 router.post('/rooms', async (req, res) => {
   const roomInitInfo = req.body;

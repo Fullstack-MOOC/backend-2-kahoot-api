@@ -24,10 +24,8 @@ export async function joinRoom(roomId, playerInfo) {
     throw new Error(`Player with your intended name (${newPlayerName}) already exists`);
   }
 
-  if (room.status === RoomStates.CLOSED) {
-    throw new Error('This room is closed');
-  } else if (room.status === RoomStates.IN_PROGRESS) {
-    throw new Error('This game is in progress. Cannot join now.');
+  if (room.status !== RoomStates.OPEN) {
+    throw new Error(`This room is not open for joining in state ${room.status}`);
   }
 
   // username is free; add player to room
