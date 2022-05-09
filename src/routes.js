@@ -52,8 +52,7 @@ router.post('/rooms/:id', async (req, res) => {
 // change room status - admin
 router.patch('/rooms/:id', async (req, res) => {
   const roomId = req.params.id;
-  const { roomKey } = req.query;
-  const { status } = req.body;
+  const { roomKey, status } = req.body;
 
   try {
     const result = await Rooms.changeStatus(roomId, roomKey, status);
@@ -74,16 +73,6 @@ router.post('/rooms/:id/submissions', async (req, res) => {
     return res.json(submissionData);
   } catch (error) {
     console.error(error);
-    return res.status(422).json({ error: error.message });
-  }
-});
-
-router.get('/rooms/:id/scoreboard', async (req, res) => {
-  const roomId = req.params.id;
-  try {
-    const scoreboard = await Rooms.getScoreboard(roomId);
-    return res.json(scoreboard);
-  } catch (error) {
     return res.status(422).json({ error: error.message });
   }
 });
