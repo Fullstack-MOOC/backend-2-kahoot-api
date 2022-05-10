@@ -66,7 +66,7 @@ export async function getState(roomId, player) {
     yourName: player,
     yourRank: requestingPlayerScoreboardPosition === -1 ? null : requestingPlayerScoreboardPosition + 1,
     top3: topThree,
-    currentQuestionNumber: gameOver ? -1 : room.currentQuestionNumber, // why was this +1
+    currentQuestionNumber: gameOver ? -1 : room.currentQuestionNumber,
     currentQuestion: gameOver ? -1 : room.questions[room.currentQuestionNumber].prompt,
   };
 

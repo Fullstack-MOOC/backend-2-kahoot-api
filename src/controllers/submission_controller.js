@@ -28,7 +28,7 @@ export async function countSubmissions(roomId, questionNumber) {
 
 // computes scores for all players in a room
 export async function getScores(roomId, currentQuestionNumber, players) {
-  const submissions = await Submission.find({ roomId, questionNumber: currentQuestionNumber });
+  const submissions = await Submission.find({ roomId });
 
   const scores = {};
   players.forEach((player) => {
@@ -43,6 +43,7 @@ export async function getScores(roomId, currentQuestionNumber, players) {
   });
 
   const sorted = Object.entries(scores).sort((a, b) => { return b[1] - a[1]; });
+  console.log(sorted);
 
   return sorted;
 }
