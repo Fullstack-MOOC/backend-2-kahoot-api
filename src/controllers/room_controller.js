@@ -73,6 +73,31 @@ export async function getState(roomId, player) {
   return state;
 }
 
+export async function forceAnswer(roomId, roomKey) {
+  const room = await Room.findById(roomId);
+
+  if (room.roomKey !== roomKey) {
+    throw new Error('Room key is incorrect');
+  }
+
+  if (room.status !== 'IN_PROGRESS') {
+    throw new Error('This game is not in progress. Can\'t submit now.');
+  }
+
+  room.players.forEach(async (player) => {
+    try {
+      await submitAnswer(roomId, player, '!timeout!');
+    } catch (err) {
+      if (err.message !== 'This player has already submitted a response to this question') {
+        console.log('not overriding players submission');
+        console.log(err);
+      } else {
+        throw err;
+      }
+    }
+  });
+}
+
 // submit an answer to a room's current question
 export async function submitAnswer(roomId, player, response) {
   const room = await Room.findById(roomId);

@@ -63,14 +63,21 @@ router.patch('/rooms/:id', async (req, res) => {
   }
 });
 
-// submit a response
+// submit a response OR force move to next question - admin
 router.post('/rooms/:id/submissions', async (req, res) => {
   const roomId = req.params.id;
-  const { player, response } = req.body;
+  const {
+    player, response, roomKey, force,
+  } = req.body;
 
   try {
-    const submissionData = await Rooms.submitAnswer(roomId, player, response);
-    return res.json(submissionData);
+    if (roomKey && force) {
+      const result = await Rooms.forceAnswer(roomId, roomKey);
+      return res.json(result);
+    } else {
+      const submissionData = await Rooms.submitAnswer(roomId, player, response);
+      return res.json(submissionData);
+    }
   } catch (error) {
     console.error(error);
     return res.status(422).json({ error: error.message });

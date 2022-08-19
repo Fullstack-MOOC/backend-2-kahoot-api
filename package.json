@@ -20,25 +20,25 @@
     "delay": "1500"
   },
   "dependencies": {
-    "@babel/cli": "^7.17.10",
-    "@babel/core": "^7.17.10",
-    "@babel/node": "^7.17.10",
-    "@babel/preset-env": "^7.17.10",
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.18.10",
+    "@babel/node": "^7.18.10",
+    "@babel/preset-env": "^7.18.10",
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",
-    "ejs": "^3.1.7",
+    "ejs": "^3.1.8",
     "express": "^4.18.1",
-    "mongoose": "^6.3.2",
+    "mongoose": "^6.5.2",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.17.0",
-    "cypress": "^9.6.0",
-    "eslint": "^8.14.0",
+    "@babel/eslint-parser": "^7.18.9",
+    "cypress": "^10.6.0",
+    "eslint": "^8.22.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsx-a11y": "^6.5.1",
-    "eslint-plugin-react": "^7.29.4",
-    "nodemon": "^2.0.16"
+    "eslint-plugin-jsx-a11y": "^6.6.1",
+    "eslint-plugin-react": "^7.30.1",
+    "nodemon": "^2.0.19"
   }
 }
