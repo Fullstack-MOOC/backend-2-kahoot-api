@@ -248,6 +248,19 @@ describe('Players submit answers to 4th question (index 3)', () => {
 });
 
 describe('Admin forces move to next question since Bob is AFK', () => {
+  it('admin fails to force next move (missing key)', () => {
+    cy.request({
+      failOnStatusCode: false,
+      method: 'POST',
+      url: `/rooms/${roomId}/submissions`,
+      body: {
+        roomKey: '!invalid!',
+        force: true,
+      },
+    }).then((response) => {
+      expect(response.status).to.eq(422);
+    });
+  });
   it('admin forces next move', () => {
     cy.request(
       'POST',
