@@ -84,18 +84,22 @@ export async function forceAnswer(roomId, roomKey) {
     throw new Error('This game is not in progress. Can\'t submit now.');
   }
 
-  room.players.forEach(async (player) => {
-    try {
-      await submitAnswer(roomId, player, '!timeout!');
-    } catch (err) {
-      if (err.message !== 'This player has already submitted a response to this question') {
-        console.log('not overriding players submission');
-        console.log(err);
-      } else {
-        throw err;
+  const promises = room.players.map((player) => {
+    const fn = async () => {
+      try {
+        await submitAnswer(roomId, player, '!timeout!');
+      } catch (err) {
+        if (err.message !== 'This player has already submitted a response to this question') {
+          console.log('not overriding players submission');
+          console.log(err);
+        } else {
+          throw err;
+        }
       }
-    }
+    };
+    return fn();
   });
+  await Promise.all(promises);
 }
 
 // submit an answer to a room's current question
