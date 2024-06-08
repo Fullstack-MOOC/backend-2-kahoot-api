@@ -1,14 +1,14 @@
-const { defineConfig } = require('cypress')
+/* eslint-disable global-require */
+/* eslint-disable import/no-extraneous-dependencies */
+const { defineConfig } = require('cypress');
 
 module.exports = defineConfig({
   video: false,
   screenshotOnRunFailure: false,
   e2e: {
-    // We've imported your old cypress plugins here.
-    // You may want to clean this up later by importing these.
-    setupNodeEvents(on, config) {
-      return require('./cypress/plugins/index.js')(on, config)
-    },
     baseUrl: 'http://localhost:9090',
+    setupNodeEvents(on, config) {
+      // implement node event listeners here
+    },
   },
-})
+});
