@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import dotenv from 'dotenv';
 import routes from './routes';
 
 // initialize
@@ -19,12 +21,14 @@ app.use(express.json()); // To parse the incoming requests with JSON payloads
 
 app.use('', routes);
 
+dotenv.config();
+
 // START THE SERVER
 // =============================================================================
 async function startServer() {
   try {
     // connect DB
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost/kahootAPI';
+    const mongoURI = process.env.MONGODB_URI ?? 'mongodb://localhost/kahootAPI';
     await mongoose.connect(mongoURI);
     console.log(`Mongoose connected to: ${mongoURI}`);
 
