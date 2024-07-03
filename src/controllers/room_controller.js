@@ -68,6 +68,7 @@ export async function getState(roomId, player) {
     top3: topThree,
     currentQuestionNumber: gameOver ? -1 : room.currentQuestionNumber,
     currentQuestion: gameOver ? -1 : room.questions[room.currentQuestionNumber].prompt,
+    isAdmin: (player === room.creator),
   };
 
   return state;
