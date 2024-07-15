@@ -20,10 +20,12 @@ export async function submit(roomId, player, questionNumber, response, correct) 
 }
 
 export async function findSubmissions(roomId, player) {
-  return Submission.find({
+  const submissionHistory = await Submission.find({
     roomId,
     player,
   });
+
+  return (submissionHistory.sort((a, b) => { return a.questionNumber - b.questionNumber; }));
 }
 
 export async function countSubmissions(roomId, questionNumber) {
