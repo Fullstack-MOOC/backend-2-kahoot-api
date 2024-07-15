@@ -19,6 +19,13 @@ export async function submit(roomId, player, questionNumber, response, correct) 
   return newSubmission;
 }
 
+export async function findSubmissions(roomId, player) {
+  return Submission.find({
+    roomId,
+    player,
+  });
+}
+
 export async function countSubmissions(roomId, questionNumber) {
   // see if all players have submitted and update the game state as necessary / has to be after submission is saved
   const numSubmissions = await Submission.countDocuments({ roomId, questionNumber });

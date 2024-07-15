@@ -151,6 +151,8 @@ describe('Players check their scores after first round', () => {
       expect(response.status).to.eq(200);
       expect(response.body.yourRank).to.eq(1);
       expect(response.body.currentQuestionNumber).to.eq(1);
+      expect(response.body.isAdmin).to.eq(false);
+      expect(response.body.submissionHistory.length).to.eq(1);
     });
   });
 
@@ -159,6 +161,8 @@ describe('Players check their scores after first round', () => {
       expect(response.status).to.eq(200);
       expect(response.body.yourRank).to.eq(2);
       expect(response.body.currentQuestionNumber).to.eq(1);
+      expect(response.body.isAdmin).to.eq(false);
+      expect(response.body.submissionHistory.length).to.eq(1);
     });
   });
 });

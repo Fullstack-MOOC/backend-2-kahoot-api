@@ -1,5 +1,10 @@
 import Room, { RoomStates } from '../models/room_model';
-import { submit, getScores, countSubmissions } from './submission_controller';
+import {
+  submit,
+  getScores,
+  countSubmissions,
+  findSubmissions,
+} from './submission_controller';
 
 export async function createRoom(roomInitInfo) {
   const newRoom = new Room();
@@ -69,6 +74,7 @@ export async function getState(roomId, player) {
     currentQuestionNumber: gameOver ? -1 : room.currentQuestionNumber,
     currentQuestion: gameOver ? -1 : room.questions[room.currentQuestionNumber].prompt,
     isAdmin: (player === room.creator),
+    submissionHistory: await findSubmissions(roomId, player),
   };
 
   return state;
